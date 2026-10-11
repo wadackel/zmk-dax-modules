@@ -232,9 +232,14 @@ static void load_model(void) {
 static void refresh_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
 
-    /* A discard or reset can leave a default slot unset again; put the default back first. */
+    /* A discard or reset can leave a default slot unset again; put the default back first.
+     * Seeding must stay silent: each write would otherwise send a Studio notification from this
+     * work queue, and with no host reading the port the transmit buffer fills after a few of them
+     * and the send never returns, which stops the keyboard at boot. */
     seeding = true;
+    zmk_custom_settings_notify_suppress_begin();
     seed_unset_slots();
+    zmk_custom_settings_notify_suppress_end();
     seeding = false;
 
     k_mutex_lock(model_lock, K_FOREVER);
