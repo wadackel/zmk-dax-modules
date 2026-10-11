@@ -19,6 +19,7 @@
 
 #include "gesture_core.h"
 #include "gesture_model.h"
+#include "gesture_rpc.h"
 
 LOG_MODULE_REGISTER(dax_gesture, CONFIG_ZMK_LOG_LEVEL);
 
@@ -34,7 +35,13 @@ struct gesture_data {
     struct dax_gesture_state state;
     /* Index into the model's profiles, or DAX_GESTURE_NO_PROFILE. */
     uint8_t active;
+    /* Recording a pattern for a client instead of recognizing. */
+    bool capturing;
 };
+
+/* A capture ends once the drawing pauses this long, or if nothing is drawn at all for a while. */
+#define CAPTURE_SETTLE_MS 700
+#define CAPTURE_GIVE_UP_MS 15000
 
 static bool layer_index_active(int index) {
     zmk_keymap_layer_id_t id = zmk_keymap_layer_index_to_id(index);
@@ -69,10 +76,11 @@ static uint8_t select_profile(const struct dax_gesture_model *model) {
     return DAX_GESTURE_NO_PROFILE;
 }
 
-static void fire(const struct gesture_config *cfg, int slot) {
+static void fire(const struct gesture_config *cfg, uint8_t profile, int slot) {
     if (slot == DAX_GESTURE_NO_MATCH) {
         return;
     }
+    dax_gesture_rpc_fired(profile, (uint8_t)slot);
 
     const struct zmk_behavior_binding binding = cfg->model->slots[slot].binding;
     struct zmk_behavior_binding_event event = {
@@ -109,13 +117,21 @@ static uint8_t sync_profile(const struct device *dev, int64_t now_ms) {
         if (data->active != DAX_GESTURE_NO_PROFILE) {
             struct dax_gesture_set set = dax_gesture_model_set(model, data->active);
 
-            fire(cfg, dax_gesture_end(&data->state, &model->tuning, &set, now_ms));
+            fire(cfg, data->active, dax_gesture_end(&data->state, &model->tuning, &set, now_ms));
         }
         dax_gesture_reset(&data->state);
         arm_idle_timer(data, now_ms);
         data->active = profile;
     }
     return profile;
+}
+
+static void end_capture(struct gesture_data *data) {
+    dax_gesture_rpc_capture_done(data->state.strokes);
+    data->capturing = false;
+    data->active = DAX_GESTURE_NO_PROFILE;
+    dax_gesture_reset(&data->state);
+    k_work_cancel_delayable(&data->idle_work);
 }
 
 static void idle_work_handler(struct k_work *work) {
@@ -125,11 +141,14 @@ static void idle_work_handler(struct k_work *work) {
     int64_t now_ms = k_uptime_get();
 
     k_mutex_lock(&data->lock, K_FOREVER);
-    if (data->active != DAX_GESTURE_NO_PROFILE &&
-        data->state.idle_deadline_ms != DAX_GESTURE_NO_DEADLINE) {
+    if (data->capturing) {
+        end_capture(data);
+    } else if (data->active != DAX_GESTURE_NO_PROFILE &&
+               data->state.idle_deadline_ms != DAX_GESTURE_NO_DEADLINE) {
         struct dax_gesture_set set = dax_gesture_model_set(cfg->model, data->active);
 
-        fire(cfg, dax_gesture_idle_elapsed(&data->state, &cfg->model->tuning, &set, now_ms));
+        fire(cfg, data->active,
+             dax_gesture_idle_elapsed(&data->state, &cfg->model->tuning, &set, now_ms));
     }
     k_mutex_unlock(&data->lock);
 }
@@ -151,19 +170,40 @@ static int gesture_handle_event(const struct device *dev, struct input_event *ev
     int64_t now_ms = k_uptime_get();
 
     k_mutex_lock(&data->lock, K_FOREVER);
+    if (data->capturing) {
+        int32_t value = event->value;
+
+        event->value = 0;
+        if (dax_gesture_capture_feed(&data->state, &cfg->model->tuning,
+                                     event->code == INPUT_REL_X, value, now_ms,
+                                     CAPTURE_SETTLE_MS)) {
+            dax_gesture_rpc_capture_stroke(data->state.strokes);
+        }
+        arm_idle_timer(data, now_ms);
+        k_mutex_unlock(&data->lock);
+        return ZMK_INPUT_PROC_CONTINUE;
+    }
+
     uint8_t profile = sync_profile(dev, now_ms);
 
     if (profile != DAX_GESTURE_NO_PROFILE) {
         struct dax_gesture_set set = dax_gesture_model_set(cfg->model, profile);
         int32_t value = event->value;
+        uint8_t strokes_before = data->state.stroke_count;
 
         /* Zeroing reaches the host from a layer override as well; ZMK_INPUT_PROC_STOP would be
          * swallowed there. */
         if (cfg->model->profiles[profile].suppress_movement) {
             event->value = 0;
         }
-        fire(cfg, dax_gesture_feed(&data->state, &cfg->model->tuning, &set,
-                                   event->code == INPUT_REL_X, value, now_ms));
+
+        int slot = dax_gesture_feed(&data->state, &cfg->model->tuning, &set,
+                                    event->code == INPUT_REL_X, value, now_ms);
+
+        if (data->state.stroke_count > strokes_before) {
+            dax_gesture_rpc_stroke(profile, data->state.strokes);
+        }
+        fire(cfg, profile, slot);
         arm_idle_timer(data, now_ms);
     }
     k_mutex_unlock(&data->lock);
@@ -265,11 +305,37 @@ static void gesture_model_changed(void) {
 }
 #endif
 
+#if IS_ENABLED(CONFIG_ZMK_DAX_GESTURE_RPC)
+void dax_gesture_capture_begin(void) {
+    struct gesture_data *data = &gesture_data;
+    int64_t now_ms = k_uptime_get();
+
+    k_mutex_lock(&data->lock, K_FOREVER);
+    dax_gesture_reset(&data->state);
+    data->capturing = true;
+    data->state.idle_deadline_ms = now_ms + CAPTURE_GIVE_UP_MS;
+    arm_idle_timer(data, now_ms);
+    k_mutex_unlock(&data->lock);
+}
+
+void dax_gesture_capture_cancel(void) {
+    struct gesture_data *data = &gesture_data;
+
+    k_mutex_lock(&data->lock, K_FOREVER);
+    if (data->capturing) {
+        dax_gesture_reset(&data->state);
+        end_capture(data);
+    }
+    k_mutex_unlock(&data->lock);
+}
+#endif
+
 static int gesture_init(const struct device *dev) {
     struct gesture_data *data = dev->data;
 
     data->dev = dev;
     data->active = DAX_GESTURE_NO_PROFILE;
+    data->capturing = false;
     k_mutex_init(&data->lock);
     k_work_init_delayable(&data->idle_work, idle_work_handler);
     dax_gesture_init(&data->state);
@@ -298,7 +364,9 @@ static int gesture_layer_listener(const zmk_event_t *eh) {
         return ZMK_EV_EVENT_BUBBLE;
     }
     k_mutex_lock(&data->lock, K_FOREVER);
-    sync_profile(dev, k_uptime_get());
+    if (!data->capturing) {
+        sync_profile(dev, k_uptime_get());
+    }
     k_mutex_unlock(&data->lock);
     return ZMK_EV_EVENT_BUBBLE;
 }

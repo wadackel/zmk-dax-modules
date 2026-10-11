@@ -52,23 +52,8 @@ LOG_MODULE_DECLARE(dax_gesture, CONFIG_ZMK_LOG_LEVEL);
 #define SLOT_DELETED 0xFE
 #define SLOT_SIZE 15
 
-#if IS_ENABLED(CONFIG_ZMK_STUDIO_RPC)
-#include <zmk/studio/custom.h>
-
-static struct zmk_rpc_custom_subsystem_meta gesture_settings_meta = {
-    ZMK_RPC_CUSTOM_SUBSYSTEM_UI_URLS(),
-    .security = ZMK_STUDIO_RPC_HANDLER_SECURED,
-};
-
-/* Registered only so the settings get a subsystem index a client can address. */
-static bool gesture_settings_handle_request(const zmk_custom_CallRequest *req, pb_callback_t *res) {
-    ARG_UNUSED(req);
-    ARG_UNUSED(res);
-    return false;
-}
-
-ZMK_RPC_CUSTOM_SUBSYSTEM(dax_gesture, &gesture_settings_meta, gesture_settings_handle_request);
-#endif
+/* The subsystem these settings belong to is registered in gesture_rpc.c when Studio RPC is on;
+ * a client needs that registration to get an index to address them by. */
 
 #define NUMBER_SETTING(name, key, initial, min, max)                                               \
     ZMK_CUSTOM_SETTING_DEFINE(name, SUBSYSTEM_ID, key, ZMK_CUSTOM_SETTING_VALUE_TYPE_INT32,        \

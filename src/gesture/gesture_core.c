@@ -193,6 +193,36 @@ int dax_gesture_end(struct dax_gesture_state *state, const struct dax_gesture_tu
     return index;
 }
 
+bool dax_gesture_capture_feed(struct dax_gesture_state *state,
+                              const struct dax_gesture_tuning *tuning, bool is_x, int32_t value,
+                              int64_t now_ms, uint32_t settle_ms) {
+    if (magnitude(value) < tuning->movement_threshold) {
+        return false;
+    }
+
+    accumulate(is_x ? &state->acc_x : &state->acc_y, value);
+    state->moved = true;
+    state->last_movement_ms = now_ms;
+    state->idle_deadline_ms = now_ms + settle_ms;
+
+    if (magnitude(state->acc_x) + magnitude(state->acc_y) < tuning->stroke_size) {
+        return false;
+    }
+
+    uint8_t direction = dominant_direction(state->acc_x, state->acc_y);
+
+    state->acc_x = 0;
+    state->acc_y = 0;
+    if (direction == state->last_direction || state->stroke_count >= DAX_GESTURE_MAX_STROKES) {
+        return false;
+    }
+
+    state->strokes |= (dax_gesture_pattern_t)direction << (state->stroke_count * STROKE_BITS);
+    state->stroke_count++;
+    state->last_direction = direction;
+    return true;
+}
+
 bool dax_gesture_pattern_is_valid(dax_gesture_pattern_t pattern) {
     uint8_t previous = 0;
     bool ended = false;

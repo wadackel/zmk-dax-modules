@@ -11,4 +11,5 @@ if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_C
     src/gesture/input_processor_gesture.c
   )
   target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_RUNTIME app PRIVATE src/gesture/gesture_settings.c)
+  target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_RPC app PRIVATE src/gesture/gesture_rpc.c)
 endif()

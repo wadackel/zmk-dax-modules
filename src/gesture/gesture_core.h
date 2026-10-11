@@ -71,5 +71,14 @@ int dax_gesture_idle_elapsed(struct dax_gesture_state *state,
 int dax_gesture_end(struct dax_gesture_state *state, const struct dax_gesture_tuning *tuning,
                     const struct dax_gesture_set *set, int64_t now_ms);
 
+/*
+ * Records strokes without matching them against anything, for teaching a new pattern. Returns
+ * true when a stroke was added. `idle_deadline_ms` is pushed `settle_ms` past every movement, so
+ * it elapses once the drawing has paused that long.
+ */
+bool dax_gesture_capture_feed(struct dax_gesture_state *state,
+                              const struct dax_gesture_tuning *tuning, bool is_x, int32_t value,
+                              int64_t now_ms, uint32_t settle_ms);
+
 /* True for one to DAX_GESTURE_MAX_STROKES strokes, each a direction, none repeating the last. */
 bool dax_gesture_pattern_is_valid(dax_gesture_pattern_t pattern);

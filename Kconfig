@@ -56,4 +56,9 @@ config ZMK_DAX_GESTURE_RUNTIME
     default y
     depends on ZMK_CUSTOM_SETTINGS && ZMK_BEHAVIOR_LOCAL_IDS
 
+config ZMK_DAX_GESTURE_RPC
+    bool "Report recognition and capture patterns over custom Studio RPC"
+    default y
+    depends on ZMK_STUDIO_RPC
+
 endif

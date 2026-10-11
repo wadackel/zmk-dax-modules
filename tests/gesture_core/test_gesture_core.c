@@ -243,6 +243,31 @@ static void test_huge_movement_does_not_overflow(void) {
     CHECK(pause_until_deadline(&rig) == 1);
 }
 
+static void test_capture_records_strokes_no_pattern_knows(void) {
+    struct rig rig = rig_with(eager, &four_way_set);
+    struct dax_gesture_state *state = &rig.state;
+
+    CHECK(!dax_gesture_capture_feed(state, &rig.tuning, false, 200, rig.now, 600));
+    CHECK(dax_gesture_capture_feed(state, &rig.tuning, false, 100, rig.now, 600));
+    CHECK(!dax_gesture_capture_feed(state, &rig.tuning, false, 400, rig.now, 600));
+    rig.now += 100;
+    CHECK(dax_gesture_capture_feed(state, &rig.tuning, true, -300, rig.now, 600));
+    CHECK(dax_gesture_capture_feed(state, &rig.tuning, false, 300, rig.now, 600));
+    CHECK(state->strokes == P3(D, L, D));
+    CHECK(state->stroke_count == 3);
+    CHECK(state->idle_deadline_ms == rig.now + 600);
+}
+
+static void test_capture_stops_at_the_longest_pattern(void) {
+    struct rig rig = rig_with(eager, &four_way_set);
+
+    for (int i = 0; i < 12; i++) {
+        dax_gesture_capture_feed(&rig.state, &rig.tuning, i % 2 == 0, 300, rig.now, 600);
+    }
+    CHECK(rig.state.stroke_count == DAX_GESTURE_MAX_STROKES);
+    CHECK(dax_gesture_pattern_is_valid(rig.state.strokes));
+}
+
 static void test_validates_patterns(void) {
     CHECK(dax_gesture_pattern_is_valid(P1(U)));
     CHECK(dax_gesture_pattern_is_valid(P3(D, R, U)));
@@ -277,6 +302,8 @@ int main(void) {
     RUN(test_skips_unused_slots);
     RUN(test_an_empty_set_never_fires);
     RUN(test_huge_movement_does_not_overflow);
+    RUN(test_capture_records_strokes_no_pattern_knows);
+    RUN(test_capture_stops_at_the_longest_pattern);
     RUN(test_validates_patterns);
 
     if (failures > 0) {
