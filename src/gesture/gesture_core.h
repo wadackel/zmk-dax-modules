@@ -76,8 +76,9 @@ int dax_gesture_end(struct dax_gesture_state *state, const struct dax_gesture_tu
 
 /*
  * Records strokes without matching them against anything, for teaching a new pattern. Returns
- * true when a stroke was added. `idle_deadline_ms` is pushed `settle_ms` past every movement, so
- * it elapses once the drawing has paused that long.
+ * true when a stroke was added. From the first stroke on, `idle_deadline_ms` is pushed `settle_ms`
+ * past every movement, so it elapses once the drawing has paused that long; until then it is left
+ * as the caller set it.
  */
 bool dax_gesture_capture_feed(struct dax_gesture_state *state,
                               const struct dax_gesture_tuning *tuning, bool is_x, int32_t value,

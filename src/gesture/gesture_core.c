@@ -206,7 +206,11 @@ bool dax_gesture_capture_feed(struct dax_gesture_state *state,
     accumulate(is_x ? &state->acc_x : &state->acc_y, value);
     state->moved = true;
     state->last_movement_ms = now_ms;
-    state->idle_deadline_ms = now_ms + settle_ms;
+    /* Before the first stroke the caller's own deadline stands: a nudge of the ball followed by a
+     * pause must not end the capture with nothing in it. */
+    if (state->stroke_count > 0) {
+        state->idle_deadline_ms = now_ms + settle_ms;
+    }
 
     if (magnitude(state->acc_x) + magnitude(state->acc_y) < tuning->stroke_size) {
         return false;
@@ -223,6 +227,7 @@ bool dax_gesture_capture_feed(struct dax_gesture_state *state,
     state->strokes |= (dax_gesture_pattern_t)direction << (state->stroke_count * STROKE_BITS);
     state->stroke_count++;
     state->last_direction = direction;
+    state->idle_deadline_ms = now_ms + settle_ms;
     return true;
 }
 

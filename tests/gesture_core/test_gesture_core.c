@@ -287,6 +287,19 @@ static void test_capture_records_strokes_no_pattern_knows(void) {
     CHECK(state->idle_deadline_ms == rig.now + 600);
 }
 
+static void test_capture_does_not_settle_before_its_first_stroke(void) {
+    struct rig rig = rig_with(eager, &four_way_set);
+    struct dax_gesture_state *state = &rig.state;
+
+    state->idle_deadline_ms = rig.now + 15000;
+    CHECK(!dax_gesture_capture_feed(state, &rig.tuning, true, 50, rig.now + 10, 600));
+    CHECK(state->idle_deadline_ms == rig.now + 15000);
+    CHECK(dax_gesture_capture_feed(state, &rig.tuning, true, 250, rig.now + 20, 600));
+    CHECK(state->idle_deadline_ms == rig.now + 620);
+    CHECK(!dax_gesture_capture_feed(state, &rig.tuning, true, 50, rig.now + 30, 600));
+    CHECK(state->idle_deadline_ms == rig.now + 630);
+}
+
 static void test_capture_stops_at_the_longest_pattern(void) {
     struct rig rig = rig_with(eager, &four_way_set);
 
@@ -335,6 +348,7 @@ int main(void) {
     RUN(test_an_empty_set_never_fires);
     RUN(test_huge_movement_does_not_overflow);
     RUN(test_capture_records_strokes_no_pattern_knows);
+    RUN(test_capture_does_not_settle_before_its_first_stroke);
     RUN(test_capture_stops_at_the_longest_pattern);
     RUN(test_validates_patterns);
 
