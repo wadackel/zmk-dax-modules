@@ -5,5 +5,10 @@ target_sources_ifdef(CONFIG_ZMK_TRACKBALL_SETTINGS app PRIVATE src/trackball_set
 
 if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL))
   target_include_directories(app PRIVATE include)
-  target_sources(app PRIVATE src/gesture/gesture_core.c src/gesture/input_processor_gesture.c)
+  target_sources(app PRIVATE
+    src/gesture/gesture_core.c
+    src/gesture/gesture_model.c
+    src/gesture/input_processor_gesture.c
+  )
+  target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_RUNTIME app PRIVATE src/gesture/gesture_settings.c)
 endif()

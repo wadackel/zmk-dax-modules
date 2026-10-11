@@ -1,0 +1,61 @@
+#include "../common.dtsi"
+
+/* The `profiles` scenario again, with the gestures served from custom settings: nothing is
+ * stored, so the devicetree defaults must come through unchanged. */
+
+/* An always-on profile on layer 0 that lets the pointer move, and a profile on a held layer that
+ * stops it. The held layer's profile wins while the key is down. Reports arrive from 1000 ms:
+ * two rightward strokes before the key (A, pointer moves), two while it is held (B, pointer
+ * still), and wheel movement, which is never touched. */
+/ {
+    gestures: gestures {
+        compatible = "dax,input-processor-gesture";
+        #input-processor-cells = <0>;
+        stroke-size = <100>;
+        gesture-cooldown-ms = <0>;
+        eager;
+
+        always {
+            layers = <0>;
+            right { pattern = <DAX_GESTURE_RIGHT>; bindings = <&kp A>; };
+        };
+
+        held {
+            layers = <1>;
+            suppress-movement;
+            right { pattern = <DAX_GESTURE_RIGHT>; bindings = <&kp B>; };
+            down_left { pattern = <DAX_GESTURE_DOWN DAX_GESTURE_LEFT>; bindings = <&kp C>; };
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&mo 1 &none &none &none>; };
+        gesture_layer { bindings = <&trans &none &none &none>; };
+    };
+
+    mock_pointer: mock_pointer {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <100>;
+        events
+            = <INPUT_EV_REL INPUT_REL_X 100 1>
+            , <INPUT_EV_REL INPUT_REL_X 60 1>
+            , <INPUT_EV_REL INPUT_REL_X 100 1>
+            , <INPUT_EV_REL INPUT_REL_WHEEL 5 1>
+            , <INPUT_EV_REL INPUT_REL_Y 100 1>
+            , <INPUT_EV_REL INPUT_REL_X (-100) 1>
+            ;
+    };
+
+    pointer_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_pointer>;
+        input-processors = <&gestures>;
+    };
+};
+
+/* Pressed at 1150 ms, between the second and third report, and held to the end. */
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1150) ZMK_MOCK_RELEASE(0,0,10)>;
+};

@@ -9,7 +9,8 @@ Built against the ZMK main line (Zephyr 4.1), `cormoran/zmk`
 | Feature | Kconfig | Needs | What it does |
 |---|---|---|---|
 | OS layer | `CONFIG_ZMK_OS_LAYER`, `CONFIG_ZMK_OS_LAYER_PROFILE_<n>=<layer>` | BLE | Keeps a layer active, locked, while a given BLE profile is selected. A non-locking `&to` does not drop it. |
-| Gestures | `CONFIG_ZMK_DAX_GESTURE` (on when the devicetree has a `dax,input-processor-gesture` node) | `CONFIG_ZMK_POINTING` | Stroke gestures on a pointing device. Gesture sets are chosen by the active layer; see `dts/bindings/input_processors/dax,input-processor-gesture.yaml`. |
+| Gestures | `CONFIG_ZMK_DAX_GESTURE` (on when the devicetree has a `dax,input-processor-gesture` node), `CONFIG_ZMK_DAX_GESTURE_MAX_GESTURES` | `CONFIG_ZMK_POINTING` | Stroke gestures on a pointing device. Gesture sets are chosen by the active layer; see `dts/bindings/input_processors/dax,input-processor-gesture.yaml`. |
+| Runtime gestures | `CONFIG_ZMK_DAX_GESTURE_RUNTIME` (on by default with the two below) | `zmk-feature-custom-settings`, `CONFIG_ZMK_BEHAVIOR_LOCAL_IDS` | Serves the gesture tuning, profiles and gestures from custom settings under the `dax_gesture` subsystem, with the devicetree as defaults. Key layout is documented at the top of `src/gesture/gesture_settings.c`. |
 | Trackball settings | `CONFIG_ZMK_TRACKBALL_SETTINGS` | `zmk-feature-custom-settings`, `zmk-driver-paw3222`, a `trackball` devicetree label with `res-cpi` | Registers the sensor's CPI as a runtime setting (`dax_trackball` / `cpi`) and applies it at boot and on change. |
 
 ## Tests

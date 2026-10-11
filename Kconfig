@@ -41,3 +41,19 @@ config ZMK_DAX_GESTURE
     default y
     depends on DT_HAS_DAX_INPUT_PROCESSOR_GESTURE_ENABLED
     depends on ZMK_POINTING
+
+if ZMK_DAX_GESTURE
+
+config ZMK_DAX_GESTURE_MAX_GESTURES
+    int "Gesture slots across all profiles"
+    default 16
+    range 1 64
+    help
+      Room for the devicetree gestures plus the ones added at runtime.
+
+config ZMK_DAX_GESTURE_RUNTIME
+    bool "Edit gesture tuning, profiles and gestures through custom settings"
+    default y
+    depends on ZMK_CUSTOM_SETTINGS && ZMK_BEHAVIOR_LOCAL_IDS
+
+endif
