@@ -1,0 +1,37 @@
+config ZMK_OS_LAYER
+    bool "OS Layer switching based on BLE profile"
+    default n
+
+if ZMK_OS_LAYER
+
+config ZMK_OS_LAYER_PROFILE_0
+    int "Layer for BLE profile 0 (-1 = none)"
+    default -1
+    range -1 31
+
+config ZMK_OS_LAYER_PROFILE_1
+    int "Layer for BLE profile 1 (-1 = none)"
+    default -1
+    range -1 31
+
+config ZMK_OS_LAYER_PROFILE_2
+    int "Layer for BLE profile 2 (-1 = none)"
+    default -1
+    range -1 31
+
+config ZMK_OS_LAYER_PROFILE_3
+    int "Layer for BLE profile 3 (-1 = none)"
+    default -1
+    range -1 31
+
+config ZMK_OS_LAYER_PROFILE_4
+    int "Layer for BLE profile 4 (-1 = none)"
+    default -1
+    range -1 31
+
+endif
+
+config ZMK_TRACKBALL_SETTINGS
+    bool "Runtime trackball sensor settings (CPI) through custom settings"
+    default n
+    depends on ZMK_CUSTOM_SETTINGS && PAW3222

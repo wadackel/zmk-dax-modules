@@ -1,0 +1,4 @@
+name: zmk-dax-modules
+build:
+  cmake: .
+  kconfig: Kconfig
