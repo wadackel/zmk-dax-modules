@@ -1,0 +1,8 @@
+#include <behaviors.dtsi>
+#include <dt-bindings/dax/gesture.h>
+#include <dt-bindings/input/input-event-codes.h>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+/* The kscan mock waits an event's delay before it and again before the next one, so each delay is
+ * the gap to the following event, and the first event also starts that late. */

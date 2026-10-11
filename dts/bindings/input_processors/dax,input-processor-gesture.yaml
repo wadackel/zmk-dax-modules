@@ -1,0 +1,98 @@
+# Copyright (c) 2026 wadackel
+# SPDX-License-Identifier: MIT
+
+description: |
+  Stroke gestures for a pointing device. Place one instance in the base chain of an input
+  listener. Each child node is a profile: a set of gestures that applies while one of its layers
+  is active. The profile of the highest active layer wins, so a held layer overrides an always-on
+  one. Each grandchild is a gesture: a stroke pattern and the behavior it taps.
+
+      gestures: gestures {
+          compatible = "dax,input-processor-gesture";
+          #input-processor-cells = <0>;
+          eager;
+
+          browse {
+              layers = <GESTURE>;
+              suppress-movement;
+              back    { pattern = <DAX_GESTURE_LEFT>;  bindings = <&kp LG(LBKT)>; };
+              forward { pattern = <DAX_GESTURE_RIGHT>; bindings = <&kp LG(RBKT)>; };
+          };
+      };
+
+compatible: "dax,input-processor-gesture"
+
+include: ip_zero_param.yaml
+
+properties:
+  stroke-size:
+    type: int
+    default: 300
+    description: Movement, |x| + |y|, that makes one stroke.
+
+  movement-threshold:
+    type: int
+    default: 0
+    description: Single reports smaller than this are ignored.
+
+  eager:
+    type: boolean
+    description: |
+      Fire as soon as the strokes match a pattern that no longer pattern starts with. A pattern
+      that is the start of a longer one fires after `idle-timeout-ms` without movement instead.
+      Without this, every pattern fires after the pause or when its profile stops applying.
+
+  idle-timeout-ms:
+    type: int
+    default: 150
+    description: Pause after which a recognized pattern fires. Zero disables the pause.
+
+  partial-gesture-timeout-ms:
+    type: int
+    default: 400
+    description: Pause after which unfinished movement is forgotten. Zero disables it.
+
+  gesture-cooldown-ms:
+    type: int
+    default: 200
+    description: Movement is ignored for this long after a gesture fired.
+
+  tap-ms:
+    type: int
+    default: 30
+    description: How long a gesture's behavior is held.
+
+child-binding:
+  description: A profile.
+
+  properties:
+    layers:
+      type: array
+      required: true
+      description: |
+        Layer positions, in keymap order, that make this profile apply. Layer 0 is always
+        active, so a profile on it applies whenever no higher profile does.
+
+    require-layers:
+      type: array
+      description: |
+        Layers that must all be active as well. Lets two profiles share a trigger layer and
+        differ by what else is on, with the more specific one declared first.
+
+    suppress-movement:
+      type: boolean
+      description: Stop the pointer while this profile applies, by zeroing the movement.
+
+  child-binding:
+    description: A gesture.
+
+    properties:
+      pattern:
+        type: array
+        required: true
+        description: One to eight strokes, DAX_GESTURE_UP / DOWN / LEFT / RIGHT, none repeated in a row.
+
+      bindings:
+        type: phandle-array
+        required: true
+        description: The single behavior the gesture taps.

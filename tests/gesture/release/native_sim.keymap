@@ -1,0 +1,48 @@
+#include "../common.dtsi"
+
+/* Without eager mode and with the pause disabled, a pattern fires when its profile stops applying:
+ * here, when the key that holds the layer is released. */
+/ {
+    gestures: gestures {
+        compatible = "dax,input-processor-gesture";
+        #input-processor-cells = <0>;
+        stroke-size = <100>;
+        idle-timeout-ms = <0>;
+        partial-gesture-timeout-ms = <0>;
+        gesture-cooldown-ms = <0>;
+
+        held {
+            layers = <1>;
+            suppress-movement;
+            up { pattern = <DAX_GESTURE_UP>; bindings = <&kp A>; };
+            up_right { pattern = <DAX_GESTURE_UP DAX_GESTURE_RIGHT>; bindings = <&kp B>; };
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&mo 1 &none &none &none>; };
+        gesture_layer { bindings = <&trans &none &none &none>; };
+    };
+
+    mock_pointer: mock_pointer {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <50>;
+        events
+            = <INPUT_EV_REL INPUT_REL_Y (-100) 1>
+            , <INPUT_EV_REL INPUT_REL_X 100 1>
+            ;
+    };
+
+    pointer_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_pointer>;
+        input-processors = <&gestures>;
+    };
+};
+
+/* Held from 600 ms to 1200 ms, around the reports at 1000 ms and 1050 ms. */
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,600) ZMK_MOCK_RELEASE(0,0,10)>;
+};

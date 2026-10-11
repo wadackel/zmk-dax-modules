@@ -1,0 +1,61 @@
+#include "../common.dtsi"
+
+/* Two profiles share the trigger layer 2. The one that also requires layer 1 is declared first
+ * and applies only while layer 1 is on; otherwise the plain one does. The same stroke is drawn
+ * with layer 1 off (A) and then on (B). */
+/ {
+    gestures: gestures {
+        compatible = "dax,input-processor-gesture";
+        #input-processor-cells = <0>;
+        stroke-size = <100>;
+        gesture-cooldown-ms = <0>;
+        eager;
+
+        overlay {
+            layers = <2>;
+            require-layers = <1>;
+            suppress-movement;
+            left { pattern = <DAX_GESTURE_LEFT>; bindings = <&kp B>; };
+        };
+
+        plain {
+            layers = <2>;
+            suppress-movement;
+            left { pattern = <DAX_GESTURE_LEFT>; bindings = <&kp A>; };
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer { bindings = <&mo 2 &tog 1 &none &none>; };
+        overlay_layer { bindings = <&trans &trans &none &none>; };
+        gesture_layer { bindings = <&trans &trans &none &none>; };
+    };
+
+    mock_pointer: mock_pointer {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <800>;
+        events
+            = <INPUT_EV_REL INPUT_REL_X (-100) 1>
+            , <INPUT_EV_REL INPUT_REL_X (-100) 1>
+            ;
+    };
+
+    pointer_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_pointer>;
+        input-processors = <&gestures>;
+    };
+};
+
+/* Gesture key down at 700 ms, overlay toggled on at 1400 ms, key up at 2010 ms. The reports at
+ * 1000 ms and 1800 ms fall on either side of the toggle. */
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,700)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,1,600)
+        ZMK_MOCK_RELEASE(0,0,10)
+    >;
+};

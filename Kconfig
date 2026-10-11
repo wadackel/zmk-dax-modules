@@ -35,3 +35,9 @@ config ZMK_TRACKBALL_SETTINGS
     bool "Runtime trackball sensor settings (CPI) through custom settings"
     default n
     depends on ZMK_CUSTOM_SETTINGS && PAW3222
+
+config ZMK_DAX_GESTURE
+    bool "Stroke gestures for a pointing device"
+    default y
+    depends on DT_HAS_DAX_INPUT_PROCESSOR_GESTURE_ENABLED
+    depends on ZMK_POINTING

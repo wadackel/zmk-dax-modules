@@ -13,10 +13,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define DAX_GESTURE_UP 1
-#define DAX_GESTURE_DOWN 2
-#define DAX_GESTURE_LEFT 3
-#define DAX_GESTURE_RIGHT 4
+#include <dt-bindings/dax/gesture.h>
 
 #define DAX_GESTURE_MAX_STROKES 8
 #define DAX_GESTURE_NO_MATCH (-1)
