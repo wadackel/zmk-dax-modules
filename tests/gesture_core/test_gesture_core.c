@@ -186,6 +186,35 @@ static void test_a_stroke_no_pattern_continues_with_starts_over(void) {
     CHECK(rig.state.idle_deadline_ms == DAX_GESTURE_NO_DEADLINE);
 }
 
+static void test_reports_each_stroke_it_adds(void) {
+    struct rig rig = rig_with(eager, &prefixed_set);
+
+    CHECK(move_y(&rig, 299) == NONE);
+    CHECK(rig.state.drawn == 0);
+    CHECK(move_y(&rig, 1) == NONE);
+    CHECK(rig.state.drawn == P1(D));
+    CHECK(move_x(&rig, 10) == NONE);
+    CHECK(rig.state.drawn == 0);
+    CHECK(move_x(&rig, 290) == NONE);
+    CHECK(rig.state.drawn == P2(D, R));
+}
+
+static void test_reports_the_stroke_that_fires_at_once(void) {
+    struct rig rig = rig_with(eager, &four_way_set);
+
+    CHECK(move_x(&rig, -300) == 0);
+    CHECK(rig.state.drawn == P1(L));
+}
+
+static void test_reports_a_stroke_no_pattern_continues_with(void) {
+    struct rig rig = rig_with(eager, &prefixed_set);
+
+    CHECK(move_y(&rig, 300) == NONE);
+    CHECK(move_x(&rig, -300) == NONE);
+    CHECK(rig.state.drawn == P2(D, L));
+    CHECK(rig.state.stroke_count == 0);
+}
+
 static void test_forgets_unfinished_movement_after_a_long_pause(void) {
     struct rig rig = rig_with(eager, &four_way_set);
 
@@ -296,6 +325,9 @@ int main(void) {
     RUN(test_patient_mode_fires_when_recognition_ends);
     RUN(test_ending_without_a_complete_pattern_fires_nothing);
     RUN(test_a_stroke_no_pattern_continues_with_starts_over);
+    RUN(test_reports_each_stroke_it_adds);
+    RUN(test_reports_the_stroke_that_fires_at_once);
+    RUN(test_reports_a_stroke_no_pattern_continues_with);
     RUN(test_forgets_unfinished_movement_after_a_long_pause);
     RUN(test_keeps_unfinished_movement_across_a_short_pause);
     RUN(test_ignores_reports_below_the_movement_threshold);

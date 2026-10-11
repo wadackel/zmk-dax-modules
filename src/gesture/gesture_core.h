@@ -52,6 +52,9 @@ struct dax_gesture_state {
     bool fired;
     int64_t last_movement_ms;
     int64_t last_fire_ms;
+    /* The strokes up to the one the last dax_gesture_feed() added, kept or not; zero if it added
+     * none. Unlike `strokes`, it survives the reset that follows a match or a dead end. */
+    dax_gesture_pattern_t drawn;
     /* When to call dax_gesture_idle_elapsed(), or DAX_GESTURE_NO_DEADLINE. */
     int64_t idle_deadline_ms;
 };

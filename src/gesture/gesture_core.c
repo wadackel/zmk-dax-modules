@@ -55,6 +55,7 @@ void dax_gesture_reset(struct dax_gesture_state *state) {
 void dax_gesture_init(struct dax_gesture_state *state) {
     dax_gesture_reset(state);
     state->fired = false;
+    state->drawn = 0;
     state->last_movement_ms = 0;
     state->last_fire_ms = 0;
 }
@@ -131,6 +132,7 @@ static void add_stroke(struct dax_gesture_state *state, const struct dax_gesture
         state->strokes | ((dax_gesture_pattern_t)direction << (state->stroke_count * STROKE_BITS));
     uint8_t stroke_count = state->stroke_count + 1;
 
+    state->drawn = strokes;
     if (!any_starts_with(set, strokes, stroke_count, false)) {
         dax_gesture_reset(state);
         return;
@@ -149,6 +151,7 @@ static void add_stroke(struct dax_gesture_state *state, const struct dax_gesture
 
 int dax_gesture_feed(struct dax_gesture_state *state, const struct dax_gesture_tuning *tuning,
                      const struct dax_gesture_set *set, bool is_x, int32_t value, int64_t now_ms) {
+    state->drawn = 0;
     if (magnitude(value) < tuning->movement_threshold) {
         return DAX_GESTURE_NO_MATCH;
     }

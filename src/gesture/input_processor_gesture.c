@@ -189,8 +189,6 @@ static int gesture_handle_event(const struct device *dev, struct input_event *ev
     if (profile != DAX_GESTURE_NO_PROFILE) {
         struct dax_gesture_set set = dax_gesture_model_set(cfg->model, profile);
         int32_t value = event->value;
-        uint8_t strokes_before = data->state.stroke_count;
-
         /* Zeroing reaches the host from a layer override as well; ZMK_INPUT_PROC_STOP would be
          * swallowed there. */
         if (cfg->model->profiles[profile].suppress_movement) {
@@ -200,8 +198,8 @@ static int gesture_handle_event(const struct device *dev, struct input_event *ev
         int slot = dax_gesture_feed(&data->state, &cfg->model->tuning, &set,
                                     event->code == INPUT_REL_X, value, now_ms);
 
-        if (data->state.stroke_count > strokes_before) {
-            dax_gesture_rpc_stroke(profile, data->state.strokes);
+        if (data->state.drawn != 0) {
+            dax_gesture_rpc_stroke(profile, data->state.drawn);
         }
         fire(cfg, profile, slot);
         arm_idle_timer(data, now_ms);
