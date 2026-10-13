@@ -36,6 +36,21 @@ config ZMK_TRACKBALL_SETTINGS
     default n
     depends on ZMK_CUSTOM_SETTINGS && PAW3222
 
+config ZMK_DAX_MACRO_DEFAULTS
+    bool "Discard puts a never-saved default runtime macro back to its devicetree body"
+    default y
+    depends on ZMK_RUNTIME_MACRO && ZMK_CUSTOM_SETTINGS_KEYSPACE
+
+config ZMK_DAX_MACRO_DISCARD_TEST
+    bool "Edit and discard a default runtime macro shortly after boot (tests only)"
+    default n
+    depends on ZMK_RUNTIME_MACRO
+
+config ZMK_DAX_MACRO_DISCARD_TEST_NAME
+    string "Name of the default macro the test edits"
+    default "esc_lang2"
+    depends on ZMK_DAX_MACRO_DISCARD_TEST
+
 config ZMK_DAX_GESTURE
     bool "Stroke gestures for a pointing device"
     default y

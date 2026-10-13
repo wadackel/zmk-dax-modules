@@ -13,6 +13,7 @@ Built against the ZMK main line (Zephyr 4.1), `cormoran/zmk`
 | Runtime gestures | `CONFIG_ZMK_DAX_GESTURE_RUNTIME` (on by default with the two below) | `zmk-feature-custom-settings`, `CONFIG_ZMK_BEHAVIOR_LOCAL_IDS` | Serves the gesture tuning, profiles and gestures from custom settings under the `dax_gesture` subsystem, with the devicetree as defaults. Key layout is documented at the top of `src/gesture/gesture_settings.c`. |
 | Gesture events | `CONFIG_ZMK_DAX_GESTURE_RPC` (on by default with Studio RPC) | `cormoran/zmk` custom Studio RPC | Reports recognized strokes and fired gestures to a client that asks, and captures a drawn pattern for it. Wire format is at the top of `src/gesture/gesture_rpc.c`. |
 | Trackball settings | `CONFIG_ZMK_TRACKBALL_SETTINGS` | `zmk-feature-custom-settings`, `zmk-driver-paw3222`, a `trackball` devicetree label with `res-cpi` | Registers the sensor's CPI as a runtime setting (`dax_trackball` / `cpi`) and applies it at boot and on change. |
+| Default macros | `CONFIG_ZMK_DAX_MACRO_DEFAULTS` (on by default with runtime macros) | `zmk-feature-runtime-macro` | Makes a discard put a devicetree macro that was never saved back to its devicetree body. Without it the macro has no record to go back to and keeps the edit. |
 
 ## Tests
 
@@ -22,10 +23,11 @@ Logic that does not need Zephyr is kept apart from the ZMK glue and tested on th
 tests/gesture_core/run.sh
 ```
 
-The directories under `tests/gesture/` are ZMK `native_sim` tests: a keymap, mocked key and pointer
-input, and the HID reports expected from them. They run from a west workspace that has this module
-checked out, the same way ZMK's own tests do (`west build -b native_sim//zmk_test_mock` with
-`-DZMK_CONFIG=<test dir>`). `zmk-config-dax6` has a runner for them (`tests/run.sh`).
+The directories under `tests/gesture/` and `tests/macro/` are ZMK `native_sim` tests: a keymap,
+mocked key and pointer input, and the HID reports expected from them. They run from a west workspace
+that has this module checked out, the same way ZMK's own tests do (`west build -b
+native_sim//zmk_test_mock` with `-DZMK_CONFIG=<test dir>`). `zmk-config-dax6` has a runner for them
+(`tests/run.sh`).
 
 ## Use
 
