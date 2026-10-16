@@ -1,0 +1,11 @@
+# Copyright (c) 2026 wadackel
+# SPDX-License-Identifier: MIT
+
+description: |
+  Plays one runtime macro when the key is pressed and another when it is released, so a macro can
+  hold a modifier or a layer for as long as the key is held. Both parameters are runtime macro
+  slots (`zmk-feature-runtime-macro`): `&dax_hold_macro <press slot> <release slot>`.
+
+compatible: "dax,behavior-hold-macro"
+
+include: two_param.yaml

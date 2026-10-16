@@ -51,6 +51,12 @@ config ZMK_DAX_MACRO_DISCARD_TEST_NAME
     default "esc_lang2"
     depends on ZMK_DAX_MACRO_DISCARD_TEST
 
+config ZMK_DAX_HOLD_MACRO
+    bool "Behavior that plays one runtime macro on press and another on release"
+    default y
+    depends on DT_HAS_DAX_BEHAVIOR_HOLD_MACRO_ENABLED
+    depends on ZMK_RUNTIME_MACRO
+
 config ZMK_DAX_GESTURE
     bool "Stroke gestures for a pointing device"
     default y

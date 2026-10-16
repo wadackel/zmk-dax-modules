@@ -1,0 +1,18 @@
+#include "../common.dtsi"
+
+// Each tap lets go well inside the 30 ms the press macro keeps the runtime macro player busy, so
+// the release macro is refused at first. It must still run: the second tap, 10 ms later, must not
+// overtake it, and the lone third tap must not leave GUI held. The idle key at position 3 only
+// gives the default macros time to be created after boot.
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(1,1,300)
+        ZMK_MOCK_RELEASE(1,1,300)
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,200)
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,500)
+    >;
+};
