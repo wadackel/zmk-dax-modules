@@ -1,0 +1,9 @@
+/ {
+    behaviors {
+        dax_hold_macro: dax_hold_macro {
+            compatible = "dax,behavior-hold-macro";
+            #binding-cells = <2>;
+            display-name = "Hold Macro";
+        };
+    };
+};

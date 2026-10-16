@@ -1,0 +1,18 @@
+#include "../common.dtsi"
+
+// Held: keys on the layer the press macro holds come out with GUI still down (TAB twice, then
+// shift+TAB), and letting go releases GUI.
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(1,1,300)
+        ZMK_MOCK_RELEASE(1,1,300)
+        ZMK_MOCK_PRESS(0,0,100)
+        ZMK_MOCK_PRESS(0,1,30)
+        ZMK_MOCK_RELEASE(0,1,30)
+        ZMK_MOCK_PRESS(0,1,30)
+        ZMK_MOCK_RELEASE(0,1,30)
+        ZMK_MOCK_PRESS(1,0,30)
+        ZMK_MOCK_RELEASE(1,0,100)
+        ZMK_MOCK_RELEASE(0,0,500)
+    >;
+};
