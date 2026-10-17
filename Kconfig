@@ -57,6 +57,76 @@ config ZMK_DAX_HOLD_MACRO
     depends on DT_HAS_DAX_BEHAVIOR_HOLD_MACRO_ENABLED
     depends on ZMK_RUNTIME_MACRO
 
+config ZMK_DAX_COMBO
+    bool "Combos matched by ZMK's combo code, edited at runtime through custom settings"
+    default n
+    depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+    select SETTINGS
+    select ZMK_CUSTOM_SETTINGS
+    select ZMK_BEHAVIOR_LOCAL_IDS
+    help
+      Combos defined by a dax,runtime-combo-defaults node and edited over the
+      dax_combo Studio RPC. They are matched by a copy of ZMK's own combo code,
+      placed at the same point in the event chain, so they work with hold-taps
+      the way zmk,combos do.
+
+if ZMK_DAX_COMBO
+
+config ZMK_DAX_COMBO_STUDIO_RPC
+    bool "Edit combos over custom Studio RPC"
+    default y
+    depends on ZMK_STUDIO
+    select ZMK_CUSTOM_SETTINGS_STUDIO_RPC
+
+config ZMK_DAX_COMBO_MAX_COMBOS
+    int "Combo slots"
+    default 8
+    range 1 16
+
+config ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO
+    int "Key positions per combo"
+    default 16
+    range 1 16
+
+config ZMK_DAX_COMBO_DEFAULT_TIMEOUT_MS
+    int "Default combo timeout"
+    default 50
+    range 1 65535
+
+config ZMK_DAX_COMBO_DEFAULT_REQUIRE_PRIOR_IDLE_MS
+    int "Default combo require-prior-idle time"
+    default 0
+    range 0 65535
+    help
+      A combo is skipped if a non-modifier key was tapped within this many
+      milliseconds before its first key. 0 disables the check.
+
+config ZMK_DAX_COMBO_TEST
+    bool "Write combos shortly after boot (tests only)"
+
+choice ZMK_DAX_COMBO_TEST_SCENARIO
+    prompt "What the test writes"
+    depends on ZMK_DAX_COMBO_TEST
+
+config ZMK_DAX_COMBO_TEST_OVERRIDES
+    bool "Overlapping combos and per-combo overrides"
+
+config ZMK_DAX_COMBO_TEST_DEFAULTS
+    bool "Edits, deletes and resets of devicetree defaults"
+
+config ZMK_DAX_COMBO_TEST_DISCARD
+    bool "Memory-only writes, then a discard"
+
+config ZMK_DAX_COMBO_TEST_PENDING
+    bool "An edit while a combo is held"
+
+config ZMK_DAX_COMBO_TEST_INVALID
+    bool "A combo with a key position outside the keymap"
+
+endchoice
+
+endif
+
 config ZMK_DAX_GESTURE
     bool "Stroke gestures for a pointing device"
     default y

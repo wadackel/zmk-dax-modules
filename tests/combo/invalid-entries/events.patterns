@@ -1,0 +1,2 @@
+s/.*hid_listener_keycode_//p
+s/.*zmk: \(combo slot .*\)/\1/p

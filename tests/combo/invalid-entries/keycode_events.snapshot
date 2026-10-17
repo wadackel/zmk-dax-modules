@@ -1,0 +1,5 @@
+combo slot 0: key position 4 is outside the keymap, skipped
+pressed: usage_page 0x07 keycode 0x0E implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x0E implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00

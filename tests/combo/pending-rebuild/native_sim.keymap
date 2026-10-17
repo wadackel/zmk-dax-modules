@@ -1,0 +1,38 @@
+#include "../common.dtsi"
+
+/*
+ * CONFIG_ZMK_DAX_COMBO_TEST_PENDING (src/test/combo_test.c) rebinds the combo
+ * to Y 10ms after its second key goes down. The held combo must still release
+ * X; the edit takes effect once every key is up.
+ */
+
+/ {
+    combos {
+        compatible = "dax,runtime-combo-defaults";
+        combo_x {
+            slot = <0>;
+            key-positions = <0 1>;
+            bindings = <&kp X>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&kp A &kp B &kp C &kp D>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_PRESS(0,1,20)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_RELEASE(0,1,10)
+    >;
+};

@@ -1,0 +1,60 @@
+#include "../common.dtsi"
+
+// A layer-tap set up as dax6 has it (balanced, 160ms), with a combo on it and the key next to it.
+&lt {
+    flavor = "balanced";
+    tapping-term-ms = <160>;
+};
+
+/ {
+    combos {
+        compatible = "dax,runtime-combo-defaults";
+        lt_combo {
+            slot = <0>;
+            bindings = <&kp Y>;
+            key-positions = <0 1>;
+            layers = <0 1>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&lt 1 X &kp B &kp C &none>;
+        };
+        upper_layer {
+            bindings = <&trans &kp N1 &kp N2 &none>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        /* layer-tap then B within the combo timeout -> Y */
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_PRESS(0,1,50)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_RELEASE(0,1,300)
+        /* B then layer-tap -> Y */
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(0,0,300)
+        /* layer-tap alone -> X */
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,300)
+        /* layer-tap held past its tapping term, then B -> 1 */
+        ZMK_MOCK_PRESS(0,0,300)
+        ZMK_MOCK_PRESS(0,1,30)
+        ZMK_MOCK_RELEASE(0,1,30)
+        ZMK_MOCK_RELEASE(0,0,300)
+        /* layer-tap, then C (not in the combo) tapped inside the tapping term -> 2 */
+        ZMK_MOCK_PRESS(0,0,30)
+        ZMK_MOCK_PRESS(1,0,30)
+        ZMK_MOCK_RELEASE(1,0,30)
+        ZMK_MOCK_RELEASE(0,0,300)
+        /* B alone -> B */
+        ZMK_MOCK_PRESS(0,1,50)
+        ZMK_MOCK_RELEASE(0,1,300)
+    >;
+};
