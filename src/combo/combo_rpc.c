@@ -27,7 +27,7 @@ static bool dax_combo_rpc_handle_request(const zmk_custom_CallRequest *raw_reque
                                          pb_callback_t *encode_response);
 
 static struct zmk_rpc_custom_subsystem_meta dax_combo_meta = {
-    .security = ZMK_STUDIO_RPC_HANDLER_UNSECURED,
+    .security = ZMK_STUDIO_RPC_HANDLER_SECURED,
 };
 
 ZMK_RPC_CUSTOM_SUBSYSTEM(dax_combo, &dax_combo_meta, dax_combo_rpc_handle_request);

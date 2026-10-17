@@ -5,9 +5,11 @@
  *
  * ZMK's app/src/combo.c (cormoran/zmk at 1fc72aaf), with the combo table built at runtime from
  * the dax_combo settings instead of the zmk,combos devicetree node. Apart from the table, the
- * changes are: require_prior_idle_ms is 32 bits, the listener is named dax_combo, and the file
- * scope is static so this can sit next to ZMK's own combos. Keep the rest identical, so that a
- * ZMK update can be diffed against it.
+ * changes are: require_prior_idle_ms is 32 bits, the listener is named dax_combo, the file scope
+ * is static so its symbols cannot clash with ZMK's combo.c, and MAX_COMBO_KEYS is the Kconfig
+ * maximum rather than the longest combo. Keep the rest identical, so that a ZMK update can be
+ * diffed against it. Virtual key positions start where ZMK's do, so a zmk,combos node in the same
+ * build would share them.
  */
 
 #include <zephyr/device.h>
