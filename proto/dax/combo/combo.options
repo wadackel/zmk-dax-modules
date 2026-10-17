@@ -1,0 +1,9 @@
+# Nanopb options file for combo.proto
+
+dax.combo.Combo.name                         max_size:64
+dax.combo.Combo.key_positions                max_count:16
+dax.combo.SetComboRequest.key_positions      max_count:16
+dax.combo.SetComboNameRequest.name           max_size:64
+dax.combo.ListCombosResponse.combos          max_count:16
+dax.combo.ErrorResponse.message              max_size:64
+dax.combo.StatusResponse.message             max_size:64

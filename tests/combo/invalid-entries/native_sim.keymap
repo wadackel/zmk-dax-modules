@@ -1,0 +1,27 @@
+#include "../common.dtsi"
+
+/*
+ * CONFIG_ZMK_DAX_COMBO_TEST_INVALID (src/test/combo_test.c) writes combo 0
+ * with a key position one past the keymap, and combo 1 on positions {1,2} ->
+ * C. Combo 0 is left out of the table; combo 1 still fires.
+ */
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&kp K &kp L &kp M &kp N>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,100)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(1,0,10)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,10)
+    >;
+};

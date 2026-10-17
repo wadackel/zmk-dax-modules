@@ -1,0 +1,5 @@
+cormoran_custom_settings, Security: Unsecured
+dax_combo, Security: Unsecured
+PASS: dax_combo_test_setup
+pressed: position 4 keycode 0x70005
+released: position 4 keycode 0x70005

@@ -1,0 +1,68 @@
+#include "../common.dtsi"
+
+// The thumb key and the E+R combo as dax6 sets them up: a balanced mod-tap with a 160ms tapping
+// term, and a combo that stays off for 150ms after a typed key.
+&mt {
+    quick-tap-ms = <0>;
+    tapping-term-ms = <160>;
+    flavor = "balanced";
+};
+
+/ {
+    combos {
+        compatible = "dax,runtime-combo-defaults";
+        er_tab {
+            slot = <0>;
+            bindings = <&kp TAB>;
+            key-positions = <1 2>;
+            layers = <0 1>;
+            require-prior-idle-ms = <150>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&mt LEFT_GUI LANG2 &kp E &kp R &kp A>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        /* quick cmd+tab: the combo comes 10ms after the mod-tap, well inside its tapping term */
+        ZMK_MOCK_PRESS(0,0,30)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,50)
+        ZMK_MOCK_RELEASE(0,0,500)
+        /* hold cmd, press the combo three times, let go */
+        ZMK_MOCK_PRESS(0,0,300)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,100)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,100)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,100)
+        ZMK_MOCK_RELEASE(0,0,500)
+        /* typing: a, then e and r rolled 40ms later stay letters */
+        ZMK_MOCK_PRESS(1,1,30)
+        ZMK_MOCK_RELEASE(1,1,40)
+        ZMK_MOCK_PRESS(0,1,15)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,500)
+        /* e and r with nothing typed before them -> TAB */
+        ZMK_MOCK_PRESS(0,1,15)
+        ZMK_MOCK_PRESS(1,0,40)
+        ZMK_MOCK_RELEASE(0,1,10)
+        ZMK_MOCK_RELEASE(1,0,500)
+    >;
+};
