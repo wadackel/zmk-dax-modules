@@ -1,4 +1,9 @@
-# Nanopb options file for combo.proto
+# Copyright (c) 2026 cormoran
+#
+# SPDX-License-Identifier: MIT
+#
+# Nanopb options file for combo.proto, adapted from cormoran/zmk-feature-runtime-combo
+# (proto/cormoran/runtime_combo/runtime_combo.options at d9490e7).
 
 dax.combo.Combo.name                         max_size:64
 dax.combo.Combo.key_positions                max_count:16

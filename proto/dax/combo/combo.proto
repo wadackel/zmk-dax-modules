@@ -1,3 +1,7 @@
+// Copyright (c) 2026 cormoran
+//
+// SPDX-License-Identifier: MIT
+//
 // Adapted from cormoran/zmk-feature-runtime-combo
 // (proto/cormoran/runtime_combo/runtime_combo.proto at d9490e7) under the dax.combo package.
 syntax = "proto3";
