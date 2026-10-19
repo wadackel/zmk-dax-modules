@@ -64,6 +64,9 @@ config ZMK_DAX_SETTINGS_VALUE_MAX_SIZE
     int "Most bytes one setting slot holds"
     default 288 if ZMK_DAX_MACRO
     default 128
+    help
+      With ZMK_DAX_MACRO on, at least 1 + ZMK_DAX_MACRO_NAME_MAX +
+      ZMK_DAX_MACRO_MAX_BYTES, the largest macro record; the build stops otherwise.
 
 config ZMK_DAX_SETTINGS_TEST
     bool "Let a test read an owner's settings from flash again (tests only)"
