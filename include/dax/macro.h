@@ -87,5 +87,6 @@ int dax_macro_save(uint32_t *written);
 int dax_macro_discard(uint32_t *changed);
 
 /* Queues a play of what the slot shows when its turn comes; plays run one after another.
- * -ENOSPC: the queue was full and the play is dropped. */
+ * -ENOSPC: the queue was full and the play is dropped. -ELOOP: started by a step of a play
+ * already four deep, and dropped. */
 int dax_macro_play(uint32_t slot, const struct zmk_behavior_binding_event *event);

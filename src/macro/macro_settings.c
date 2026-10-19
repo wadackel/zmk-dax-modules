@@ -12,8 +12,8 @@
  *   n+1..  body (macro_body.h), whose first byte is its version
  *
  * An unset slot shows its default, encoded when it is read: ZMK's table of local ids is itself
- * read from settings and may not be there while settings load. A default cannot be deleted, as a
- * combo's cannot; a reset shows it again. tap_ms is a uint16, little-endian.
+ * read from settings and may not be there while settings load. A default cannot be deleted; a
+ * reset shows it again. tap_ms is a uint16, little-endian.
  */
 
 #include <errno.h>
@@ -263,13 +263,12 @@ static int read_record(uint32_t slot, uint8_t *record) {
     }
     int len = dax_setting_get(&dax_macro_slots, slot, record, RECORD_MAX_SIZE);
     if (len >= 0) {
-        if (!record_readable(record, len)) {
-            LOG_DBG("dax macro: slot %u holds a record this firmware cannot read", slot);
-            return -ENOENT;
+        if (record_readable(record, len)) {
+            return len;
         }
-        return len;
-    }
-    if (len != -ENOENT) {
+        /* Its default shows in its place, as overridden, so a reset still reaches the record. */
+        LOG_DBG("dax macro: slot %u holds a record this firmware cannot read", slot);
+    } else if (len != -ENOENT) {
         return len;
     }
     const struct macro_default *def = find_default(slot);

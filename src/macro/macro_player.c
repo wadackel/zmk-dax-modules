@@ -37,8 +37,9 @@ K_MSGQ_DEFINE(dax_macro_plays, sizeof(struct play), CONFIG_ZMK_DAX_MACRO_PLAY_QU
 static void play_next(struct k_work *work);
 static K_WORK_DELAYABLE_DEFINE(play_work, play_next);
 
-/* Touched only by play_work. The body is a copy taken when the play starts, so an edit made
- * while it plays does not change it. */
+/* Written only by play_work; dax_macro_play reads in_step and depth from the same work queue, as
+ * the behaviors that call it run there. The body is a copy taken when the play starts, so an
+ * edit made while it plays does not change it. */
 static struct {
     bool active;
     uint8_t depth;

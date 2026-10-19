@@ -42,7 +42,7 @@ static const struct behavior_parameter_metadata metadata = {
 
 static void play(uint32_t slot, const struct zmk_behavior_binding_event *event) {
     int ret = dax_macro_play(slot, event);
-    if (ret < 0 && ret != -ENOSPC) {
+    if (ret < 0 && ret != -ENOSPC && ret != -ELOOP) {
         LOG_WRN("Hold macro: dax macro %u: %d", slot, ret);
     }
 }

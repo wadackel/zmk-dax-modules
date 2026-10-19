@@ -67,7 +67,7 @@ message ListMacrosRequest {}
 
 message GetMacroRequest { uint32 slot = 1; }
 
-// An empty macro named `name` in the first slot that shows nothing.
+// An empty macro named `name` in the first slot that shows nothing and has no devicetree default.
 message CreateMacroRequest { string name = 1; }
 
 message RenameMacroRequest {
@@ -134,7 +134,7 @@ enum ErrorCode {
     ERROR_CODE_INVALID = 2;
     // Another slot shows a macro with that name.
     ERROR_CODE_EXISTS = 3;
-    // Every slot shows a macro.
+    // Every slot shows a macro or has a devicetree default.
     ERROR_CODE_NO_ROOM = 4;
     // The name, or the macro's encoded size, is over its limit.
     ERROR_CODE_TOO_LONG = 5;

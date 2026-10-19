@@ -46,7 +46,7 @@ static const struct behavior_parameter_metadata metadata = {
 static int on_dax_macro_pressed(struct zmk_behavior_binding *binding,
                                 struct zmk_behavior_binding_event event) {
     int ret = dax_macro_play(binding->param1, &event);
-    if (ret < 0 && ret != -ENOSPC) {
+    if (ret < 0 && ret != -ENOSPC && ret != -ELOOP) {
         LOG_WRN("dax macro %u: %d", binding->param1, ret);
     }
     return ZMK_BEHAVIOR_OPAQUE;
