@@ -12,6 +12,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/sys/byteorder.h>
 
 #include <dax/settings.h>
 
@@ -120,6 +121,87 @@ int dax_setting_unset(const struct dax_setting *setting, uint16_t slot) {
     k_mutex_unlock(&state_lock);
     raise_changed(setting->owner);
     return 0;
+}
+
+bool dax_setting_is_dirty(const struct dax_setting *setting, uint16_t slot) {
+    if (!setting || slot >= setting->count) {
+        return false;
+    }
+    k_mutex_lock(&state_lock, K_FOREVER);
+    bool dirty = slot_dirty(setting, slot);
+    k_mutex_unlock(&state_lock);
+    return dirty;
+}
+
+int dax_setting_check(const struct dax_setting *setting, uint16_t slot, const void *data,
+                      size_t len) {
+    if (!setting || !setting->type || slot >= setting->count || !data || len == 0 ||
+        len > setting->size) {
+        return -EINVAL;
+    }
+    const struct dax_setting_type *type = setting->type;
+    const uint8_t *bytes = data;
+    switch (type->kind) {
+    case DAX_SETTING_INT32: {
+        if (len != sizeof(int32_t)) {
+            return -EINVAL;
+        }
+        int32_t value = (int32_t)sys_get_le32(bytes);
+        if (value < type->min || value > type->max) {
+            return -EINVAL;
+        }
+        break;
+    }
+    case DAX_SETTING_BOOL:
+        if (len != 1 || bytes[0] > 1) {
+            return -EINVAL;
+        }
+        break;
+    case DAX_SETTING_BYTES:
+        break;
+    default:
+        return -EINVAL;
+    }
+    return type->validate ? type->validate(slot, bytes, len) : 0;
+}
+
+int dax_setting_read(const struct dax_setting *setting, uint16_t slot, void *buf, size_t buf_size,
+                     bool *unreadable) {
+    if (!setting || !setting->type || slot >= setting->count) {
+        return -EINVAL;
+    }
+    uint8_t value[DAX_SETTING_TYPED_MAX_SIZE];
+    int len = dax_setting_get(setting, slot, value, sizeof(value));
+    bool passed_over = false;
+    if (len >= 0 && dax_setting_check(setting, slot, value, len) == 0) {
+        if ((size_t)len > buf_size) {
+            return -ENOSPC;
+        }
+        memcpy(buf, value, len);
+    } else {
+        /* A record too large to load is a set slot of length 0, and is passed over too. */
+        passed_over = len >= 0;
+        len = setting->type->default_value
+                  ? setting->type->default_value(slot, buf, buf_size)
+                  : -ENOENT;
+    }
+    if (unreadable) {
+        *unreadable = passed_over;
+    }
+    return len;
+}
+
+int32_t dax_setting_read_int32(const struct dax_setting *setting, uint16_t slot,
+                               int32_t fallback) {
+    uint8_t value[sizeof(int32_t)];
+    return dax_setting_read(setting, slot, value, sizeof(value), NULL) == sizeof(value)
+               ? (int32_t)sys_get_le32(value)
+               : fallback;
+}
+
+bool dax_setting_read_bool(const struct dax_setting *setting, uint16_t slot, bool fallback) {
+    uint8_t value;
+    return dax_setting_read(setting, slot, &value, 1, NULL) == 1 ? value != 0 : fallback;
 }
 
 static bool owned_by(const struct dax_setting *setting, const char *owner) {

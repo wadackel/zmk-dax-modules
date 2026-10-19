@@ -1,0 +1,20 @@
+# Copyright (c) 2026 wadackel
+#
+# SPDX-License-Identifier: MIT
+#
+# Nanopb options file for settings.proto. Values and defaults hold DAX_SETTING_TYPED_MAX_SIZE
+# bytes; settings_rpc.c checks the sizes against include/dax/settings.h.
+
+dax.settings.Setting.key                     max_size:24
+dax.settings.Setting.value                   max_size:32
+dax.settings.Setting.default_value           max_size:32
+dax.settings.ListRequest.owner               max_size:24
+dax.settings.WriteRequest.owner              max_size:24
+dax.settings.WriteRequest.key                max_size:24
+dax.settings.WriteRequest.value              max_size:32
+dax.settings.ResetRequest.owner              max_size:24
+dax.settings.ResetRequest.key                max_size:24
+dax.settings.SaveRequest.owner               max_size:24
+dax.settings.DiscardRequest.owner            max_size:24
+dax.settings.ListResponse.settings           max_count:16
+dax.settings.ErrorResponse.message           max_size:64

@@ -1,4 +1,5 @@
 dax_combo, Security: Secured
+dax_settings, Security: Secured
 PASS: dax_combo_test_setup
 pressed: position 4 keycode 0x70005
 released: position 4 keycode 0x70005
