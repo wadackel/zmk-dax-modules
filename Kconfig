@@ -65,12 +65,29 @@ config ZMK_DAX_HOLD_MACRO
     depends on DT_HAS_DAX_BEHAVIOR_HOLD_MACRO_ENABLED
     depends on ZMK_RUNTIME_MACRO
 
+config ZMK_DAX_SETTINGS
+    bool
+    select SETTINGS
+    help
+      The dax settings layer (include/dax/settings.h): values a feature edits at
+      runtime, kept in RAM until saved. Selected by the features that use it.
+
+if ZMK_DAX_SETTINGS
+
+config ZMK_DAX_SETTINGS_VALUE_MAX_SIZE
+    int "Most bytes one setting slot holds"
+    default 128
+
+config ZMK_DAX_SETTINGS_TEST
+    bool "Let a test read an owner's settings from flash again (tests only)"
+
+endif
+
 config ZMK_DAX_COMBO
-    bool "Combos matched by ZMK's combo code, edited at runtime through custom settings"
+    bool "Combos matched by ZMK's combo code, edited at runtime"
     default n
     depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
-    select SETTINGS
-    select ZMK_CUSTOM_SETTINGS
+    select ZMK_DAX_SETTINGS
     select ZMK_BEHAVIOR_LOCAL_IDS
     help
       Combos defined by a dax,runtime-combo-defaults node and edited over the
@@ -84,7 +101,6 @@ config ZMK_DAX_COMBO_STUDIO_RPC
     bool "Edit combos over custom Studio RPC"
     default y
     depends on ZMK_STUDIO
-    select ZMK_CUSTOM_SETTINGS_STUDIO_RPC
 
 config ZMK_DAX_COMBO_MAX_COMBOS
     int "Combo slots"
@@ -130,6 +146,10 @@ config ZMK_DAX_COMBO_TEST_PENDING
 
 config ZMK_DAX_COMBO_TEST_INVALID
     bool "A combo with a key position outside the keymap"
+
+config ZMK_DAX_COMBO_TEST_RELOAD
+    bool "Saves, then reads the combos from flash again"
+    select ZMK_DAX_SETTINGS_TEST
 
 endchoice
 

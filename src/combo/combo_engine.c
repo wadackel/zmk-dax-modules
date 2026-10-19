@@ -496,12 +496,7 @@ static bool load_combo(uint32_t slot, const struct dax_combo_global_settings *gl
                        struct combo_cfg *cfg) {
     struct dax_combo_config combo;
     int ret = dax_combo_read(slot, &combo);
-    if (ret == -ENODEV) {
-        // A combo being written over RPC is briefly read back before its behavior is.
-        LOG_DBG("combo slot %u: behavior not resolved", slot);
-        return false;
-    }
-    if (ret == -ENOENT) {
+    if (ret == -ENOENT || ret == -EBADMSG) {
         return false;
     }
     if (ret < 0) {
@@ -509,6 +504,11 @@ static bool load_combo(uint32_t slot, const struct dax_combo_global_settings *gl
         return false;
     }
     if (!combo.enabled) {
+        return false;
+    }
+    if (!combo.behavior.behavior_dev) {
+        LOG_WRN("combo slot %u: behavior %u is not in this firmware, skipped", slot,
+                combo.behavior_id);
         return false;
     }
     if (combo.key_position_len == 0 || combo.key_position_len > MAX_COMBO_KEYS) {

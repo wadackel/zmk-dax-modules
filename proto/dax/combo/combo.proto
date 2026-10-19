@@ -23,14 +23,15 @@ enum SlowReleaseOverride {
 
 // Where a combo's currently effective configuration comes from.
 enum ComboSource {
-    // No stored value and no compile-time default.
+    // Nothing written and no compile-time default, or a stored record this firmware
+    // cannot read (the slot then acts as empty until it is written or reset).
     COMBO_SOURCE_EMPTY = 0;
     // A compile-time default, not overridden at runtime.
     COMBO_SOURCE_DEFAULT = 1;
-    // A compile-time default exists, but a stored runtime value takes
-    // precedence (which may itself be a disabled tombstone).
+    // A compile-time default exists, but a value written at runtime takes
+    // precedence (which may itself be a disabled combo).
     COMBO_SOURCE_OVERRIDDEN = 2;
-    // A stored runtime value with no compile-time default.
+    // A value written at runtime with no compile-time default.
     COMBO_SOURCE_RUNTIME = 3;
 }
 
@@ -67,7 +68,7 @@ message SetComboRequest {
     BehaviorBinding behavior = 3;
     uint32 layer_mask = 5;
     bool enabled = 7;
-    bool persist = 8;
+    reserved 8;
     // 0 means inherit the global timeout.
     uint32 timeout_ms = 9;
     // 0 means inherit the global require-prior-idle setting.
@@ -78,33 +79,33 @@ message SetComboRequest {
 message SetComboNameRequest {
     uint32 index = 1;
     string name = 2;
-    bool persist = 3;
+    reserved 3;
 }
 
 message DeleteComboRequest {
     uint32 index = 1;
-    bool persist = 2;
+    reserved 2;
 }
 
-// Erases a stored runtime override, restoring the compile-time default (or an
-// empty slot, if there is none).
+// Forgets what was written to the slot, so the compile-time default (or an empty
+// slot, if there is none) shows again. Like every other write, it waits for Save.
 message ResetComboRequest { uint32 index = 1; }
 
 message GetGlobalSettingsRequest {}
 
 message SetTimeoutMsRequest {
     uint32 timeout_ms = 1;
-    bool persist = 2;
+    reserved 2;
 }
 
 message SetSlowReleaseRequest {
     bool slow_release = 1;
-    bool persist = 2;
+    reserved 2;
 }
 
 message SetRequirePriorIdleMsRequest {
     uint32 require_prior_idle_ms = 1;
-    bool persist = 2;
+    reserved 2;
 }
 
 message SaveRequest {}
@@ -135,6 +136,7 @@ message GetComboResponse { Combo combo = 1; }
 message GetGlobalSettingsResponse { GlobalSettings settings = 1; }
 
 message StatusResponse {
+    // For a save, the records it wrote; for a discard, the ones it put back.
     uint32 affected_count = 1;
     string message = 2;
 }

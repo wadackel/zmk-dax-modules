@@ -13,8 +13,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include <cormoran/zmk/custom_settings.h>
 #include <dax/combo.h>
+#include <dax/settings.h>
 #include <dt-bindings/zmk/keys.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/position_state_changed.h>
@@ -37,7 +37,7 @@ static int write_combo(uint32_t slot, uint32_t keycode, const int32_t *positions
     for (uint8_t i = 0; i < len; i++) {
         combo.key_positions[i] = positions[i];
     }
-    int ret = dax_combo_write(slot, &combo, false);
+    int ret = dax_combo_write(slot, &combo);
     if (ret < 0) {
         LOG_ERR("combo test: writing slot %u failed: %d", slot, ret);
     }
@@ -58,23 +58,51 @@ static int setup(void) {
  * different behavior, and slot 4's is tombstoned then restored by a reset. */
 static int setup(void) {
     int ret = write_combo(0, B, (const int32_t[]){0, 1}, 2, 0, 0);
-    ret = ret ?: dax_combo_delete(2, false);
+    ret = ret ?: dax_combo_delete(2);
     ret = ret ?: write_combo(3, J, (const int32_t[]){6, 7}, 2, 0, 0);
-    ret = ret ?: dax_combo_delete(4, false);
+    ret = ret ?: dax_combo_delete(4);
     return ret ?: dax_combo_reset(4);
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_DISCARD)
-/* Both writes are memory only, so an unscoped discard reverts them to empty slots. */
+/* Both writes are memory only, so a discard reverts them to empty slots. */
 static int setup(void) {
     int ret = write_combo(0, B, (const int32_t[]){0, 1}, 2, 0, 0);
     ret = ret ?: write_combo(1, C, (const int32_t[]){2, 3}, 2, 0, 0);
-    return ret ?: zmk_custom_settings_discard_scope(DAX_COMBO_SUBSYSTEM_ID, NULL, NULL, NULL);
+    return ret ?: dax_combo_discard(NULL);
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_INVALID)
 /* Slot 0 names a key position past the end of the keymap; slot 1 is a usable combo. */
 static int setup(void) {
     int ret = write_combo(0, B, (const int32_t[]){0, ZMK_KEYMAP_LEN}, 2, 0, 0);
     return ret ?: write_combo(1, C, (const int32_t[]){1, 2}, 2, 0, 0);
+}
+#elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_RELOAD)
+/* The flash file of native_sim outlives a run, so the slot is emptied in flash first. Each step
+ * logs what slot 0 reads after the combos were read from flash again. */
+static void log_slot(const char *step) {
+    struct dax_combo_config combo;
+    int ret = dax_combo_read(0, &combo);
+    if (ret < 0) {
+        LOG_INF("combo test: %s: slot 0 read %d", step, ret);
+        return;
+    }
+    LOG_INF("combo test: %s: slot 0 keys %d %d binding %s 0x%x", step, combo.key_positions[0],
+            combo.key_positions[1], combo.behavior.behavior_dev ? "resolved" : "unresolved",
+            combo.behavior.param1);
+}
+
+static int setup(void) {
+    uint32_t written = 0;
+    int ret = dax_combo_reset(0);
+    ret = ret ?: dax_combo_save(NULL);
+    ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);
+    log_slot("emptied");
+    ret = ret ?: write_combo(0, B, (const int32_t[]){0, 1}, 2, 0, 0);
+    ret = ret ?: dax_combo_save(&written);
+    LOG_INF("combo test: saved %u record(s)", written);
+    ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);
+    log_slot("reloaded");
+    return ret;
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_PENDING)
 /* The edit lands while the default combo of tests/combo/pending-rebuild is held. */
@@ -121,4 +149,4 @@ static int on_initialized(const zmk_event_t *eh) {
 }
 
 ZMK_LISTENER(dax_combo_test, on_initialized);
-ZMK_SUBSCRIPTION(dax_combo_test, zmk_custom_settings_initialized);
+ZMK_SUBSCRIPTION(dax_combo_test, dax_settings_loaded);

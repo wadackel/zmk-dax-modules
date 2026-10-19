@@ -19,7 +19,6 @@
 
 #include <dax/combo.h>
 #include <dax/combo/combo.pb.h>
-#include <cormoran/zmk/custom_settings.h>
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
@@ -90,12 +89,19 @@ static dax_combo_ComboSource combo_source(uint32_t index) {
 static int fill_combo_message(uint32_t index, dax_combo_Combo *message) {
     struct dax_combo_config combo;
     int ret = dax_combo_read(index, &combo);
+    *message = (dax_combo_Combo)dax_combo_Combo_init_zero;
+    message->index = index;
+    /* A record this firmware cannot read is shown as an empty slot, so one bad record does not
+     * take the whole list with it. */
+    if (ret == -EBADMSG) {
+        message->source = dax_combo_ComboSource_COMBO_SOURCE_EMPTY;
+        message->has_behavior = true;
+        return 0;
+    }
     if (ret < 0) {
         return ret;
     }
 
-    *message = (dax_combo_Combo)dax_combo_Combo_init_zero;
-    message->index = index;
     message->enabled = combo.enabled;
     message->layer_mask = combo.layer_mask;
     message->key_positions_count = combo.key_position_len;
@@ -109,19 +115,18 @@ static int fill_combo_message(uint32_t index, dax_combo_Combo *message) {
 
     dax_combo_read_name(index, message->name, sizeof(message->name));
 
+    /* The stored id, resolved or not: the app shows a behavior this build lacks as unknown. */
     message->has_behavior = true;
-    if (combo.behavior.behavior_dev) {
-        message->behavior.behavior_id = zmk_behavior_get_local_id(combo.behavior.behavior_dev);
-        message->behavior.param1 = combo.behavior.param1;
-        message->behavior.param2 = combo.behavior.param2;
-    }
+    message->behavior.behavior_id = combo.behavior_id;
+    message->behavior.param1 = combo.behavior.param1;
+    message->behavior.param2 = combo.behavior.param2;
 
     return 0;
 }
 
 static int handle_list_combos(dax_combo_Response *resp) {
     dax_combo_ListCombosResponse result = dax_combo_ListCombosResponse_init_zero;
-    uint32_t count = MIN(dax_combo_count(), dax_combo_max_count());
+    uint32_t count = dax_combo_max_count();
 
     for (uint32_t i = 0; i < count; i++) {
         int ret = fill_combo_message(i, &result.combos[result.combos_count]);
@@ -224,7 +229,7 @@ static int handle_set_combo(const dax_combo_SetComboRequest *req, dax_combo_Resp
         return ret;
     }
 
-    ret = dax_combo_write(req->index, &combo, req->persist);
+    ret = dax_combo_write(req->index, &combo);
     if (ret < 0) {
         return ret;
     }
@@ -235,7 +240,7 @@ static int handle_set_combo(const dax_combo_SetComboRequest *req, dax_combo_Resp
 
 static int handle_set_combo_name(const dax_combo_SetComboNameRequest *req,
                                  dax_combo_Response *resp) {
-    int ret = dax_combo_write_name(req->index, req->name, req->persist);
+    int ret = dax_combo_write_name(req->index, req->name);
     if (ret < 0) {
         return ret;
     }
@@ -245,7 +250,7 @@ static int handle_set_combo_name(const dax_combo_SetComboNameRequest *req,
 }
 
 static int handle_delete_combo(const dax_combo_DeleteComboRequest *req, dax_combo_Response *resp) {
-    int ret = dax_combo_delete(req->index, req->persist);
+    int ret = dax_combo_delete(req->index);
     if (ret < 0) {
         return ret;
     }
@@ -260,7 +265,7 @@ static int handle_set_timeout_ms(const dax_combo_SetTimeoutMsRequest *req,
         return -EINVAL;
     }
 
-    int ret = dax_combo_write_timeout_ms((uint16_t)req->timeout_ms, req->persist);
+    int ret = dax_combo_write_timeout_ms((uint16_t)req->timeout_ms);
     if (ret < 0) {
         return ret;
     }
@@ -271,7 +276,7 @@ static int handle_set_timeout_ms(const dax_combo_SetTimeoutMsRequest *req,
 
 static int handle_set_slow_release(const dax_combo_SetSlowReleaseRequest *req,
                                    dax_combo_Response *resp) {
-    int ret = dax_combo_write_slow_release(req->slow_release, req->persist);
+    int ret = dax_combo_write_slow_release(req->slow_release);
     if (ret < 0) {
         return ret;
     }
@@ -287,7 +292,7 @@ static int handle_set_require_prior_idle_ms(const dax_combo_SetRequirePriorIdleM
     }
 
     int ret =
-        dax_combo_write_require_prior_idle_ms((uint16_t)req->require_prior_idle_ms, req->persist);
+        dax_combo_write_require_prior_idle_ms((uint16_t)req->require_prior_idle_ms);
     if (ret < 0) {
         return ret;
     }
@@ -308,7 +313,7 @@ static int handle_reset_combo(const dax_combo_ResetComboRequest *req, dax_combo_
 
 static int handle_save(dax_combo_Response *resp) {
     uint32_t affected_count = 0;
-    int ret = zmk_custom_settings_save_scope(DAX_COMBO_SUBSYSTEM_ID, NULL, NULL, &affected_count);
+    int ret = dax_combo_save(&affected_count);
     if (ret < 0) {
         return ret;
     }
@@ -319,8 +324,7 @@ static int handle_save(dax_combo_Response *resp) {
 
 static int handle_discard(dax_combo_Response *resp) {
     uint32_t affected_count = 0;
-    int ret =
-        zmk_custom_settings_discard_scope(DAX_COMBO_SUBSYSTEM_ID, NULL, NULL, &affected_count);
+    int ret = dax_combo_discard(&affected_count);
     if (ret < 0) {
         return ret;
     }

@@ -8,6 +8,11 @@ target_sources_ifdef(CONFIG_ZMK_DAX_HOLD_MACRO app PRIVATE src/behaviors/behavio
 
 target_include_directories(app PRIVATE include)
 
+if(CONFIG_ZMK_DAX_SETTINGS)
+  target_sources(app PRIVATE src/settings/settings.c)
+  zephyr_linker_sources(SECTIONS include/linker/dax-settings.ld)
+endif()
+
 # The wire definitions of every enabled RPC, generated together at the end of this file: a second
 # zephyr_library() in this directory would collide with the first.
 set(dax_protos)
