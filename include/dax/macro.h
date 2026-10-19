@@ -48,10 +48,11 @@ struct dax_macro_step {
 };
 
 enum dax_macro_source {
-    /* Nothing written and no default, or a record this firmware cannot read. */
+    /* Nothing written and no default, or, with no default, a record this firmware cannot read. */
     DAX_MACRO_SOURCE_EMPTY,
     DAX_MACRO_SOURCE_DEFAULT,
-    /* A devicetree default exists, and a macro written at runtime takes its place. */
+    /* A devicetree default exists, and a macro written at runtime takes its place; or a record this
+     * firmware cannot read is there, and the default shows until a reset clears it. */
     DAX_MACRO_SOURCE_OVERRIDDEN,
     DAX_MACRO_SOURCE_RUNTIME,
 };

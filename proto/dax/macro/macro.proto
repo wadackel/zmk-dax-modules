@@ -36,11 +36,13 @@ message MacroStep {
 
 // Where the macro a slot shows comes from.
 enum MacroSource {
-    // Nothing written and no default, or a stored record this firmware cannot read.
+    // Nothing written and no default, or a stored record this firmware cannot read in a slot
+    // with no default.
     MACRO_SOURCE_EMPTY = 0;
     // The devicetree default, not written at runtime.
     MACRO_SOURCE_DEFAULT = 1;
-    // A devicetree default exists, and a macro written at runtime takes its place.
+    // A devicetree default exists, and a macro written at runtime takes its place; or a stored
+    // record this firmware cannot read is there, and the default shows until a reset clears it.
     MACRO_SOURCE_OVERRIDDEN = 2;
     // Written at runtime, with no devicetree default.
     MACRO_SOURCE_RUNTIME = 3;
