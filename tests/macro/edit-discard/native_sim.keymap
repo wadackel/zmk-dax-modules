@@ -1,5 +1,5 @@
 #include "../common.dtsi"
 
 // CONFIG_ZMK_DAX_MACRO_TEST_EDIT_DISCARD (src/test/macro_test.c) creates, renames, deletes and
-// edits macros in RAM, the defaults included, and discards. The keys then play what the
-// devicetree says: ESC and LANG2, nothing, C, nothing.
+// edits macros in RAM, renaming and editing a default too, and discards. The keys then play what
+// the devicetree says: ESC and LANG2, nothing, C, nothing.

@@ -6,8 +6,8 @@ description: |
   Compile-time defaults for the dax macros (CONFIG_ZMK_DAX_MACRO), adapted from
   cormoran/zmk-feature-runtime-macro at 3853096. Each child node is the macro a
   slot shows until something is written to it through the dax_macro Studio RPC.
-  Nothing is written at boot: a reset shows the default again, and a delete
-  hides it until a reset.
+  Nothing is written at boot, and a reset shows the default again. A default
+  cannot be deleted. A build takes one such node.
 
 compatible: "dax,runtime-macro-defaults"
 

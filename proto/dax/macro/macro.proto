@@ -36,8 +36,7 @@ message MacroStep {
 
 // Where the macro a slot shows comes from.
 enum MacroSource {
-    // Nothing written and no default, a default that was deleted, or a stored record this firmware
-    // cannot read.
+    // Nothing written and no default, or a stored record this firmware cannot read.
     MACRO_SOURCE_EMPTY = 0;
     // The devicetree default, not written at runtime.
     MACRO_SOURCE_DEFAULT = 1;
@@ -68,8 +67,7 @@ message ListMacrosRequest {}
 
 message GetMacroRequest { uint32 slot = 1; }
 
-// An empty macro named `name` in the first slot that shows nothing. A slot whose default was
-// deleted does not count as free: a reset brings its default back there.
+// An empty macro named `name` in the first slot that shows nothing.
 message CreateMacroRequest { string name = 1; }
 
 message RenameMacroRequest {
@@ -77,7 +75,8 @@ message RenameMacroRequest {
     string name = 2;
 }
 
-// Removes the macro. A slot with a devicetree default then shows nothing until it is reset.
+// Removes a macro written at runtime. One that comes with the devicetree cannot be deleted; reset
+// it instead.
 message DeleteMacroRequest { uint32 slot = 1; }
 
 // Forgets what was written to the slot, so its devicetree default, or nothing, shows again.
@@ -130,11 +129,12 @@ enum ErrorCode {
     ERROR_CODE_FAILED = 0;
     // No such slot, step, or macro in the slot.
     ERROR_CODE_NOT_FOUND = 1;
-    // A step that is not well formed, a behavior the keyboard lacks, or parameters it refuses.
+    // A step that is not well formed, a behavior the keyboard lacks, parameters it refuses, or
+    // deleting a macro that comes with the devicetree.
     ERROR_CODE_INVALID = 2;
     // Another slot shows a macro with that name.
     ERROR_CODE_EXISTS = 3;
-    // Every slot shows a macro or holds a deleted default.
+    // Every slot shows a macro.
     ERROR_CODE_NO_ROOM = 4;
     // The name, or the macro's encoded size, is over its limit.
     ERROR_CODE_TOO_LONG = 5;
@@ -146,7 +146,8 @@ message ErrorResponse {
 }
 
 message StatusResponse {
-    // For a save, the slots it wrote; for a discard, the ones it put back; for a create, the slot.
+    // For a save, the records it wrote, macro slots and the tap time; for a discard, the ones it
+    // put back; for a create, the slot.
     uint32 affected_count = 1;
 }
 

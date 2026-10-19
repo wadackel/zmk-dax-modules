@@ -77,7 +77,7 @@ static int setup(void) {
     struct dax_macro_step delay = {.kind = DAX_MACRO_STEP_DELAY, .delay_ms = 5};
 
     log_slots("at boot");
-    log_result("delete 2", dax_macro_delete(2));
+    log_result("delete the default in 2", dax_macro_delete(2));
     log_result("create one", dax_macro_create("one", &slot));
     LOG_INF("macro test: one is in slot %u", slot);
     log_result("create two", dax_macro_create("two", &slot));
@@ -94,7 +94,8 @@ static int setup(void) {
     log_result("set step 0 of 0", dax_macro_set_step(0, 0, &delay));
     log_result("rename 0", dax_macro_rename(0, "renamed"));
     log_result("set the step count of 3 to 0", dax_macro_set_step_count(3, 0));
-    log_result("append to the deleted 2", dax_macro_append_step(2, &step));
+    log_result("delete 3", dax_macro_delete(3));
+    log_result("append to the deleted 3", dax_macro_append_step(3, &step));
     log_slots("edited");
 
     uint32_t changed = 0;
@@ -111,6 +112,7 @@ static int setup(void) {
     for (uint32_t slot = 0; slot < CONFIG_ZMK_DAX_MACRO_COUNT; slot++) {
         ret = ret ?: dax_macro_reset(slot);
     }
+    ret = ret ?: dax_macro_write_tap_ms(CONFIG_ZMK_DAX_MACRO_DEFAULT_TAP_MS);
     ret = ret ?: dax_macro_save(NULL);
     ret = ret ?: dax_settings_test_reload(DAX_MACRO_SUBSYSTEM_ID);
     log_slots("emptied");
@@ -122,10 +124,15 @@ static int setup(void) {
     ret = ret ?: dax_macro_create("saved", &slot);
     ret = ret ?: dax_macro_append_step(slot, &step);
     ret = ret ?: dax_macro_append_step(slot, &keys);
+    ret = ret ?: dax_macro_create("gone", NULL);
     ret = ret ?: dax_macro_rename(0, "esc");
-    ret = ret ?: dax_macro_delete(2);
     ret = ret ?: dax_macro_write_tap_ms(40);
     uint32_t written = 0;
+    ret = ret ?: dax_macro_save(&written);
+    LOG_INF("macro test: saved %u record(s)", written);
+
+    log_result("delete the default in 2", dax_macro_delete(2));
+    ret = ret ?: dax_macro_delete(3);
     ret = ret ?: dax_macro_save(&written);
     LOG_INF("macro test: saved %u record(s)", written);
 

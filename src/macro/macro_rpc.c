@@ -62,6 +62,10 @@ static void set_errno_error(dax_macro_Response *resp, int err) {
     case -EINVAL:
         set_error(resp, dax_macro_ErrorCode_ERROR_CODE_INVALID, "Not a step or name it can hold");
         break;
+    case -EPERM:
+        set_error(resp, dax_macro_ErrorCode_ERROR_CODE_INVALID,
+                  "A macro that comes with the firmware cannot be deleted");
+        break;
     case -EEXIST:
         set_error(resp, dax_macro_ErrorCode_ERROR_CODE_EXISTS, "Another macro has that name");
         break;

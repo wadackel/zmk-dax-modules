@@ -11,9 +11,9 @@
  *   1..n   name, UTF-8 without a terminator
  *   n+1..  body (macro_body.h), whose first byte is its version
  *
- * or the one byte SLOT_DELETED, which hides a devicetree default. An unset slot shows its
- * default, encoded when it is read: ZMK's table of local ids is itself read from settings and may
- * not be there while settings load. tap_ms is a uint16, little-endian.
+ * An unset slot shows its default, encoded when it is read: ZMK's table of local ids is itself
+ * read from settings and may not be there while settings load. A default cannot be deleted, as a
+ * combo's cannot; a reset shows it again. tap_ms is a uint16, little-endian.
  */
 
 #include <errno.h>
@@ -37,7 +37,6 @@
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-#define SLOT_DELETED 0xFE
 #define RECORD_MAX_SIZE (1 + CONFIG_ZMK_DAX_MACRO_NAME_MAX + CONFIG_ZMK_DAX_MACRO_MAX_BYTES)
 #define TAP_MS_MAX 10000
 
@@ -261,9 +260,6 @@ static int read_record(uint32_t slot, uint8_t *record) {
     }
     int len = dax_setting_get(&dax_macro_slots, slot, record, RECORD_MAX_SIZE);
     if (len >= 0) {
-        if (len == 1 && record[0] == SLOT_DELETED) {
-            return -ENOENT;
-        }
         if (!record_readable(record, len)) {
             LOG_DBG("dax macro: slot %u holds a record this firmware cannot read", slot);
             return -ENOENT;
@@ -286,14 +282,6 @@ static int read_record(uint32_t slot, uint8_t *record) {
         return -ENOENT;
     }
     return 1 + name_len + body_len;
-}
-
-/* Only a slot with a default holds one that was deleted: once a firmware drops the default, the
- * mark hides nothing and the slot is free. */
-static bool holds_deleted_default(uint32_t slot) {
-    uint8_t mark[2];
-    return find_default(slot) && dax_setting_get(&dax_macro_slots, slot, mark, sizeof(mark)) == 1 &&
-           mark[0] == SLOT_DELETED;
 }
 
 /* An edit that changes nothing writes nothing, so it does not leave a default unsaved. */
@@ -383,7 +371,9 @@ int dax_macro_create(const char *name, uint32_t *slot) {
     }
     uint8_t record[RECORD_MAX_SIZE];
     for (uint32_t candidate = 0; candidate < CONFIG_ZMK_DAX_MACRO_COUNT; candidate++) {
-        if (read_record(candidate, record) >= 0 || holds_deleted_default(candidate)) {
+        /* A slot with a default is passed over even when it shows nothing: a macro made there
+         * could not be deleted, and a reset would put the default back over it. */
+        if (find_default(candidate) || read_record(candidate, record) >= 0) {
             continue;
         }
         size_t len = put_name(record, name);
@@ -422,11 +412,7 @@ int dax_macro_delete(uint32_t slot) {
     if (len < 0) {
         return len;
     }
-    if (!find_default(slot)) {
-        return dax_setting_unset(&dax_macro_slots, slot);
-    }
-    const uint8_t mark = SLOT_DELETED;
-    return dax_setting_set(&dax_macro_slots, slot, &mark, 1);
+    return find_default(slot) ? -EPERM : dax_setting_unset(&dax_macro_slots, slot);
 }
 
 int dax_macro_reset(uint32_t slot) {

@@ -8,7 +8,8 @@
  *
  * A slot that is out of range, or that shows nothing where a macro is needed, is -ENOENT. A step
  * or a name that is not well formed is -EINVAL, a name or a body over its limit -EMSGSIZE, a name
- * another slot shows -EEXIST, and a create with no slot to take -ENOSPC.
+ * another slot shows -EEXIST, a create with no slot to take -ENOSPC, and a delete of a macro that
+ * comes with the devicetree -EPERM.
  */
 
 #pragma once
@@ -47,7 +48,7 @@ struct dax_macro_step {
 };
 
 enum dax_macro_source {
-    /* Nothing written and no default, a deleted default, or a record this firmware cannot read. */
+    /* Nothing written and no default, or a record this firmware cannot read. */
     DAX_MACRO_SOURCE_EMPTY,
     DAX_MACRO_SOURCE_DEFAULT,
     /* A devicetree default exists, and a macro written at runtime takes its place. */
@@ -69,10 +70,11 @@ uint16_t dax_macro_tap_ms(void);
 int dax_macro_next_step(const uint8_t *body, size_t len, size_t *offset,
                         struct dax_macro_step *step);
 
-/* An empty macro in the first slot that shows nothing and does not hold a deleted default. */
+/* An empty macro in the first slot that shows nothing and has no devicetree default. */
 int dax_macro_create(const char *name, uint32_t *slot);
 int dax_macro_rename(uint32_t slot, const char *name);
-/* A slot with a devicetree default then shows nothing until it is reset. */
+/* Removes a macro written at runtime. One that comes with the devicetree cannot be deleted; a
+ * reset puts it back instead. */
 int dax_macro_delete(uint32_t slot);
 /* Forgets what was written to the slot, so its devicetree default, or nothing, shows again. */
 int dax_macro_reset(uint32_t slot);

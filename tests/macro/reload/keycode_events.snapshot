@@ -1,8 +1,11 @@
 macro test: emptied: slot 0 esc_lang2, 10 bytes, steps KT, default, unsaved 0
 macro test: emptied: slot 2 other, 4 bytes, steps K, default, unsaved 0
 macro test: saved 4 record(s)
+macro test: delete the default in 2: -1
+macro test: saved 1 record(s)
 macro test: reloaded: slot 0 esc, 10 bytes, steps KT, overridden, unsaved 0
 macro test: reloaded: slot 1 saved, 10 bytes, steps TK, runtime, unsaved 0
+macro test: reloaded: slot 2 other, 4 bytes, steps K, default, unsaved 0
 macro test: tap_ms 40
 macro test: create new: 0
 macro test: new is in slot 3
@@ -15,3 +18,5 @@ pressed: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
 released: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
 pressed: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
 released: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
