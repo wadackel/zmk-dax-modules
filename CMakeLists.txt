@@ -37,6 +37,21 @@ if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_C
   target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_TEST app PRIVATE src/test/gesture_test.c)
 endif()
 
+if(CONFIG_ZMK_DAX_MACRO)
+  target_sources(app PRIVATE
+    src/macro/macro_body.c
+    src/macro/macro_settings.c
+    src/macro/macro_player.c
+    src/behaviors/behavior_dax_macro.c
+  )
+  target_sources_ifdef(CONFIG_ZMK_DAX_MACRO_TEST app PRIVATE src/test/macro_test.c)
+
+  if(CONFIG_ZMK_DAX_MACRO_STUDIO_RPC)
+    target_sources(app PRIVATE src/macro/macro_rpc.c)
+    list(APPEND dax_protos ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/macro/macro.proto)
+  endif()
+endif()
+
 if(CONFIG_ZMK_DAX_COMBO)
   target_sources(app PRIVATE src/combo/combo_engine.c src/combo/combo_settings.c)
   target_sources_ifdef(CONFIG_ZMK_DAX_COMBO_TEST app PRIVATE src/test/combo_test.c)

@@ -77,6 +77,7 @@ if ZMK_DAX_SETTINGS
 
 config ZMK_DAX_SETTINGS_VALUE_MAX_SIZE
     int "Most bytes one setting slot holds"
+    default 288 if ZMK_DAX_MACRO
     default 128
 
 config ZMK_DAX_SETTINGS_TEST
@@ -158,6 +159,72 @@ config ZMK_DAX_COMBO_TEST_INVALID
 
 config ZMK_DAX_COMBO_TEST_RELOAD
     bool "Saves, then reads the combos from flash again"
+    select ZMK_DAX_SETTINGS_TEST
+
+endchoice
+
+endif
+
+config ZMK_DAX_MACRO
+    bool "Macros in fixed slots, edited at runtime"
+    default n
+    depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+    select ZMK_DAX_SETTINGS
+    select ZMK_BEHAVIOR_LOCAL_IDS
+    help
+      Macros played by `&dax_macro <slot>`, with a dax,runtime-macro-defaults node
+      as defaults, edited over the dax_macro Studio RPC. A slot is one record in the
+      dax settings layer, and every edit stays in RAM until a save.
+
+if ZMK_DAX_MACRO
+
+config ZMK_DAX_MACRO_STUDIO_RPC
+    bool "Edit macros over custom Studio RPC"
+    default y
+    depends on ZMK_STUDIO
+
+config ZMK_DAX_MACRO_COUNT
+    int "Macro slots"
+    default 8
+    range 1 16
+
+config ZMK_DAX_MACRO_NAME_MAX
+    int "Most bytes in a macro's name"
+    default 24
+    range 1 31
+
+config ZMK_DAX_MACRO_MAX_BYTES
+    int "Most bytes in a macro's encoded steps, with their version byte"
+    default 256
+    range 2 1024
+
+config ZMK_DAX_MACRO_PLAY_QUEUE
+    int "Plays that wait while a macro plays"
+    default 8
+    range 1 64
+    help
+      A play that finds the queue full is dropped, with a warning in the log.
+
+config ZMK_DAX_MACRO_DEFAULT_TAP_MS
+    int "Default time a macro holds each key it taps"
+    default 30
+    range 0 10000
+
+config ZMK_DAX_MACRO_TEST
+    bool "Edit macros shortly after boot (tests only)"
+
+choice ZMK_DAX_MACRO_TEST_SCENARIO
+    prompt "What the test writes"
+    depends on ZMK_DAX_MACRO_TEST
+
+config ZMK_DAX_MACRO_TEST_DEFAULTS
+    bool "Nothing; logs what the slots show"
+
+config ZMK_DAX_MACRO_TEST_EDIT_DISCARD
+    bool "Creates, renames, deletes and step edits in RAM, then a discard"
+
+config ZMK_DAX_MACRO_TEST_RELOAD
+    bool "Saves, then reads the macros from flash again"
     select ZMK_DAX_SETTINGS_TEST
 
 endchoice

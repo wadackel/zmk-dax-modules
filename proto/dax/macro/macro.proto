@@ -1,0 +1,179 @@
+// Copyright (c) 2026 cormoran
+//
+// SPDX-License-Identifier: MIT
+//
+// Adapted from cormoran/zmk-feature-runtime-macro
+// (proto/cormoran/runtime_macro/runtime_macro.proto at 3853096) under the dax.macro package.
+//
+// The dax_macro custom Studio subsystem. A macro lives in a fixed slot, the number a
+// `&dax_macro <slot>` binding plays. Every request that changes a macro, creating, renaming and
+// deleting one included, changes RAM only: Save writes what differs from the last save, Discard
+// puts it back. A slot nothing was written to shows its devicetree default, if it has one.
+syntax = "proto3";
+
+package dax.macro;
+
+message BehaviorBinding {
+    uint32 behavior_id = 1;
+    uint32 param1 = 2;
+    uint32 param2 = 3;
+}
+
+message DelayStep { uint32 delay_ms = 1; }
+
+// One byte a key: the low seven bits are a keyboard usage from 0x04 to 0x38, bit 7 adds left shift.
+message KeyTapSequenceStep { bytes packed_keys = 1; }
+
+message MacroStep {
+    oneof step {
+        BehaviorBinding down = 1;
+        BehaviorBinding up = 2;
+        BehaviorBinding tap = 3;
+        DelayStep delay = 4;
+        KeyTapSequenceStep key_tap_sequence = 5;
+    }
+}
+
+// Where the macro a slot shows comes from.
+enum MacroSource {
+    // Nothing written and no default, a default that was deleted, or a stored record this firmware
+    // cannot read.
+    MACRO_SOURCE_EMPTY = 0;
+    // The devicetree default, not written at runtime.
+    MACRO_SOURCE_DEFAULT = 1;
+    // A devicetree default exists, and a macro written at runtime takes its place.
+    MACRO_SOURCE_OVERRIDDEN = 2;
+    // Written at runtime, with no devicetree default.
+    MACRO_SOURCE_RUNTIME = 3;
+}
+
+message MacroSummary {
+    uint32 slot = 1;
+    string name = 2;
+    uint32 encoded_size = 3;
+    // RAM differs from what was last saved. A default nobody edited is not unsaved.
+    bool unsaved = 4;
+    MacroSource source = 5;
+}
+
+message MacroDetail {
+    uint32 slot = 1;
+    string name = 2;
+    repeated MacroStep steps = 3;
+    uint32 encoded_size = 4;
+    MacroSource source = 5;
+}
+
+message ListMacrosRequest {}
+
+message GetMacroRequest { uint32 slot = 1; }
+
+// An empty macro named `name` in the first slot that shows nothing. A slot whose default was
+// deleted does not count as free: a reset brings its default back there.
+message CreateMacroRequest { string name = 1; }
+
+message RenameMacroRequest {
+    uint32 slot = 1;
+    string name = 2;
+}
+
+// Removes the macro. A slot with a devicetree default then shows nothing until it is reset.
+message DeleteMacroRequest { uint32 slot = 1; }
+
+// Forgets what was written to the slot, so its devicetree default, or nothing, shows again.
+message ResetMacroRequest { uint32 slot = 1; }
+
+message SetMacroStepRequest {
+    uint32 slot = 1;
+    uint32 step_index = 2;
+    MacroStep step = 3;
+}
+
+message AppendMacroStepRequest {
+    uint32 slot = 1;
+    MacroStep step = 2;
+}
+
+// Keeps the first `step_count` steps.
+message SetMacroStepCountRequest {
+    uint32 slot = 1;
+    uint32 step_count = 2;
+}
+
+message GetMacroGlobalSettingsRequest {}
+
+message SetTapMsRequest { uint32 tap_ms = 1; }
+
+message SaveMacrosRequest {}
+
+message DiscardMacrosRequest {}
+
+message Request {
+    oneof request_type {
+        ListMacrosRequest list_macros = 1;
+        GetMacroRequest get_macro = 2;
+        CreateMacroRequest create_macro = 3;
+        RenameMacroRequest rename_macro = 4;
+        DeleteMacroRequest delete_macro = 5;
+        ResetMacroRequest reset_macro = 6;
+        SetMacroStepRequest set_macro_step = 7;
+        AppendMacroStepRequest append_macro_step = 8;
+        SetMacroStepCountRequest set_macro_step_count = 9;
+        GetMacroGlobalSettingsRequest get_macro_global_settings = 10;
+        SetTapMsRequest set_tap_ms = 11;
+        SaveMacrosRequest save_macros = 12;
+        DiscardMacrosRequest discard_macros = 13;
+    }
+}
+
+enum ErrorCode {
+    ERROR_CODE_FAILED = 0;
+    // No such slot, step, or macro in the slot.
+    ERROR_CODE_NOT_FOUND = 1;
+    // A step that is not well formed, a behavior the keyboard lacks, or parameters it refuses.
+    ERROR_CODE_INVALID = 2;
+    // Another slot shows a macro with that name.
+    ERROR_CODE_EXISTS = 3;
+    // Every slot shows a macro or holds a deleted default.
+    ERROR_CODE_NO_ROOM = 4;
+    // The name, or the macro's encoded size, is over its limit.
+    ERROR_CODE_TOO_LONG = 5;
+}
+
+message ErrorResponse {
+    ErrorCode code = 1;
+    string message = 2;
+}
+
+message StatusResponse {
+    // For a save, the slots it wrote; for a discard, the ones it put back; for a create, the slot.
+    uint32 affected_count = 1;
+}
+
+message ListMacrosResponse {
+    // Every slot that shows a macro.
+    repeated MacroSummary macros = 1;
+    uint32 max_macro_bytes = 2;
+    uint32 max_name_length = 3;
+    uint32 slot_count = 4;
+}
+
+message GetMacroResponse { MacroDetail macro = 1; }
+
+message MacroGlobalSettings {
+    uint32 tap_ms = 1;
+    uint32 max_entries = 2;
+    uint32 key_press_behavior_id = 3;
+}
+
+message GetMacroGlobalSettingsResponse { MacroGlobalSettings settings = 1; }
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        StatusResponse status = 2;
+        ListMacrosResponse list_macros = 3;
+        GetMacroResponse get_macro = 4;
+        GetMacroGlobalSettingsResponse get_macro_global_settings = 5;
+    }
+}

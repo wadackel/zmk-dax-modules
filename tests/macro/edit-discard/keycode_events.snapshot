@@ -1,0 +1,33 @@
+macro test: at boot: slot 0 esc_lang2, 10 bytes, steps KT, default, unsaved 0
+macro test: at boot: slot 2 other, 4 bytes, steps K, default, unsaved 0
+macro test: delete 2: 0
+macro test: create one: 0
+macro test: one is in slot 1
+macro test: create two: 0
+macro test: two is in slot 3
+macro test: create a third: -28
+macro test: create a duplicate: -17
+macro test: rename 1 to a duplicate: -17
+macro test: rename 1: 0
+macro test: append a tap to 1: 0
+macro test: append keys to 1: 0
+macro test: append an unknown behavior to 1: -22
+macro test: set step 5 of 1: -2
+macro test: set the step count of 1 to 3: -22
+macro test: set step 0 of 0: 0
+macro test: rename 0: 0
+macro test: set the step count of 3 to 0: 0
+macro test: append to the deleted 2: -2
+macro test: edited: slot 0 renamed, 9 bytes, steps WT, overridden, unsaved 1
+macro test: edited: slot 1 uno, 11 bytes, steps TK, runtime, unsaved 1
+macro test: edited: slot 3 two, 1 bytes, steps , runtime, unsaved 1
+macro test: discarded 4 slot(s)
+macro test: discarded: slot 0 esc_lang2, 10 bytes, steps KT, default, unsaved 0
+macro test: discarded: slot 2 other, 4 bytes, steps K, default, unsaved 0
+PASS: dax_macro_test_setup
+pressed: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00

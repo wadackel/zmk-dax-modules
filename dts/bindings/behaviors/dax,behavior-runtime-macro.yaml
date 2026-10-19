@@ -1,0 +1,10 @@
+# Copyright (c) 2026 wadackel
+# SPDX-License-Identifier: MIT
+
+description: |
+  Plays the dax macro in a slot (CONFIG_ZMK_DAX_MACRO) when the key is pressed:
+  `&dax_macro <slot>`. A play while another macro plays waits for it.
+
+compatible: "dax,behavior-runtime-macro"
+
+include: one_param.yaml

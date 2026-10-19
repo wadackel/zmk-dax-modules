@@ -1,0 +1,46 @@
+#include <behaviors.dtsi>
+#include <behaviors/dax_macro.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+// The first key is pressed again while its macro still waits between A and B: the second play
+// waits for the first, so A B comes out twice. The second key plays 64 taps, one key tap
+// sequence, more than ZMK's behavior queue holds at once: every key comes out, and is let go of.
+/ {
+    dax_macros {
+        compatible = "dax,runtime-macro-defaults";
+
+        slow {
+            slot = <0>;
+            bindings = <&macro_tap &kp A>, <&macro_wait_time 100>, <&macro_tap &kp B>;
+        };
+
+        long {
+            slot = <1>;
+            bindings = <&macro_tap>,
+                <&kp A &kp B &kp C &kp D &kp E &kp F &kp G &kp H &kp I &kp J &kp K &kp L &kp M
+                 &kp N &kp O &kp P &kp Q &kp R &kp S &kp T &kp U &kp V &kp W &kp X &kp Y &kp Z
+                 &kp N1 &kp N2 &kp N3 &kp N4 &kp N5 &kp N6 &kp N7 &kp N8 &kp N9 &kp N0 &kp A &kp B &kp C
+                 &kp D &kp E &kp F &kp G &kp H &kp I &kp J &kp K &kp L &kp M &kp N &kp O &kp P
+                 &kp Q &kp R &kp S &kp T &kp U &kp V &kp W &kp X &kp Y &kp Z &kp N1 &kp N2>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&dax_macro 0 &dax_macro 1 &none &none>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,500)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,1,2500)
+    >;
+};

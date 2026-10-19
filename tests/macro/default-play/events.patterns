@@ -1,0 +1,3 @@
+s/.*macro test: /macro test: /p
+s/.*PASS:/PASS:/p
+s/.*hid_listener_keycode_//p

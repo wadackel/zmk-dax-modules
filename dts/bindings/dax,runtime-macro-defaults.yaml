@@ -1,0 +1,39 @@
+# Copyright (c) 2026 cormoran
+#
+# SPDX-License-Identifier: MIT
+
+description: |
+  Compile-time defaults for the dax macros (CONFIG_ZMK_DAX_MACRO), adapted from
+  cormoran/zmk-feature-runtime-macro at 3853096. Each child node is the macro a
+  slot shows until something is written to it through the dax_macro Studio RPC.
+  Nothing is written at boot: a reset shows the default again, and a delete
+  hides it until a reset.
+
+compatible: "dax,runtime-macro-defaults"
+
+child-binding:
+  description: A single default macro.
+
+  properties:
+    slot:
+      type: int
+      required: true
+      description: The slot, the number `&dax_macro <slot>` plays.
+    macro-name:
+      type: string
+      description: >
+        The macro's name. Defaults to the node name. (Not `name`: devicetree keeps
+        that for the node name.)
+    bindings:
+      type: phandle-array
+      required: true
+      description: >
+        The steps, as a zmk,behavior-macro writes them: &macro_tap, &macro_press and
+        &macro_release set how the bindings after them are played (tap at first),
+        and &macro_wait_time <ms> waits. Taps of &kp with a keyboard usage from 0x04
+        to 0x38, shifted or not, are packed one byte a key.
+    wait-ms:
+      type: int
+      default: 0
+      description: >
+        A wait between consecutive steps that are not packed keys. 0 adds none.
