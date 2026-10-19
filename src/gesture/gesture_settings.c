@@ -48,6 +48,7 @@ LOG_MODULE_DECLARE(dax_gesture, CONFIG_ZMK_LOG_LEVEL);
 /* The subsystem these settings belong to is registered in gesture_rpc.c when Studio RPC is on;
  * a client needs it to tell that the keyboard has gestures. */
 
+BUILD_ASSERT(PROFILE_COUNT >= 1, "Runtime gestures need at least one gesture profile");
 BUILD_ASSERT(DT_CHILD_NUM(GESTURE_NODE) == DT_CHILD_NUM_STATUS_OKAY(GESTURE_NODE),
              "Remove a gesture profile instead of disabling it: setting slots follow child order");
 
@@ -128,7 +129,8 @@ static int gesture_default(uint16_t slot, uint8_t *buf, size_t size) {
     return SLOT_SIZE;
 }
 
-/* A gesture the recognizer can use, or the one byte that removes one. */
+/* A gesture the recognizer can fire, checked as a keymap or combo binding is, or the one byte
+ * that removes one. A stored gesture whose behavior this build lacks reads as unreadable. */
 static int gesture_validate(uint16_t slot, const uint8_t *data, size_t len) {
     ARG_UNUSED(slot);
     if (len == 1) {
@@ -136,6 +138,14 @@ static int gesture_validate(uint16_t slot, const uint8_t *data, size_t len) {
     }
     if (len != SLOT_SIZE || data[0] >= PROFILE_COUNT ||
         !dax_gesture_pattern_is_valid(sys_get_le32(&data[1]))) {
+        return -EINVAL;
+    }
+    struct zmk_behavior_binding binding = {
+        .behavior_dev = zmk_behavior_find_behavior_name_from_local_id(sys_get_le16(&data[5])),
+        .param1 = sys_get_le32(&data[7]),
+        .param2 = sys_get_le32(&data[11]),
+    };
+    if (!binding.behavior_dev || zmk_behavior_validate_binding(&binding) < 0) {
         return -EINVAL;
     }
     return 0;
@@ -161,22 +171,22 @@ static const struct dax_setting_type name_type = {
 static const struct dax_setting_type gesture_type = {
     .kind = DAX_SETTING_BYTES, .default_value = gesture_default, .validate = gesture_validate};
 
-#define INT32_SETTING(name, key, count, type)                                                      \
-    DAX_SETTING_DEFINE_TYPED(name, SUBSYSTEM_ID, key, count, sizeof(int32_t), &type)
+#define TUNING_SETTING(name, key, size, type)                                                      \
+    DAX_SETTING_DEFINE_TYPED(name, SUBSYSTEM_ID, key, size, &type)
+#define PROFILE_SETTING(name, key, size, type)                                                     \
+    DAX_SETTING_DEFINE_TYPED_SLOTS(name, SUBSYSTEM_ID, key, PROFILE_COUNT, size, &type)
 
-INT32_SETTING(dax_gesture_stroke_size, "stroke_size", 1, stroke_size_type);
-INT32_SETTING(dax_gesture_idle_ms, "idle_ms", 1, idle_ms_type);
-INT32_SETTING(dax_gesture_cooldown_ms, "cooldown_ms", 1, cooldown_ms_type);
-INT32_SETTING(dax_gesture_partial_ms, "partial_ms", 1, partial_ms_type);
-DAX_SETTING_DEFINE_TYPED(dax_gesture_eager, SUBSYSTEM_ID, "eager", 1, 1, &eager_type);
-DAX_SETTING_DEFINE_TYPED(dax_gesture_profile_name, SUBSYSTEM_ID, "profile_name", PROFILE_COUNT,
-                         PROFILE_NAME_SIZE, &name_type);
-INT32_SETTING(dax_gesture_profile_layers, "profile_layers", PROFILE_COUNT, layers_type);
-INT32_SETTING(dax_gesture_profile_require, "profile_require", PROFILE_COUNT, require_type);
-DAX_SETTING_DEFINE_TYPED(dax_gesture_profile_suppress, SUBSYSTEM_ID, "profile_suppress",
-                         PROFILE_COUNT, 1, &suppress_type);
-DAX_SETTING_DEFINE_TYPED(dax_gesture_slot, SUBSYSTEM_ID, "gesture", SLOT_COUNT, SLOT_SIZE,
-                         &gesture_type);
+TUNING_SETTING(dax_gesture_stroke_size, "stroke_size", sizeof(int32_t), stroke_size_type);
+TUNING_SETTING(dax_gesture_idle_ms, "idle_ms", sizeof(int32_t), idle_ms_type);
+TUNING_SETTING(dax_gesture_cooldown_ms, "cooldown_ms", sizeof(int32_t), cooldown_ms_type);
+TUNING_SETTING(dax_gesture_partial_ms, "partial_ms", sizeof(int32_t), partial_ms_type);
+TUNING_SETTING(dax_gesture_eager, "eager", 1, eager_type);
+PROFILE_SETTING(dax_gesture_profile_name, "profile_name", PROFILE_NAME_SIZE, name_type);
+PROFILE_SETTING(dax_gesture_profile_layers, "profile_layers", sizeof(int32_t), layers_type);
+PROFILE_SETTING(dax_gesture_profile_require, "profile_require", sizeof(int32_t), require_type);
+PROFILE_SETTING(dax_gesture_profile_suppress, "profile_suppress", 1, suppress_type);
+DAX_SETTING_DEFINE_TYPED_SLOTS(dax_gesture_slot, SUBSYSTEM_ID, "gesture", SLOT_COUNT, SLOT_SIZE,
+                               &gesture_type);
 
 static struct dax_gesture_slot read_slot(uint16_t index) {
     uint8_t value[SLOT_SIZE];

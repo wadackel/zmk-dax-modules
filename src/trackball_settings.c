@@ -58,8 +58,7 @@ static const struct dax_setting_type cpi_type = {
     .default_value = cpi_default,
 };
 
-DAX_SETTING_DEFINE_TYPED(trackball_cpi_setting, SUBSYSTEM_ID, "cpi", 1, sizeof(int32_t),
-                         &cpi_type);
+DAX_SETTING_DEFINE_TYPED(trackball_cpi_setting, SUBSYSTEM_ID, "cpi", sizeof(int32_t), &cpi_type);
 
 static void apply_cpi(void) {
     const struct device *trackball = DEVICE_DT_GET(TRACKBALL_NODE);
@@ -79,7 +78,6 @@ static void apply_cpi(void) {
 static int trackball_settings_listener(const zmk_event_t *eh) {
     const struct dax_setting_changed *changed = as_dax_setting_changed(eh);
 
-    // Settings finished loading, or the value changed: a saved value replaces the devicetree one.
     if (changed == NULL || strcmp(changed->owner, SUBSYSTEM_ID) == 0) {
         apply_cpi();
     }

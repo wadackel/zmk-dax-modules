@@ -56,7 +56,7 @@ static void raise_changed(const char *owner) {
 }
 
 static int storage_name(const struct dax_setting *setting, uint16_t slot, char *name, size_t size) {
-    int len = setting->count == 1
+    int len = !setting->indexed
                   ? snprintf(name, size, DAX_SETTINGS_SUBTREE "/%s/%s", setting->owner,
                              setting->key)
                   : snprintf(name, size, DAX_SETTINGS_SUBTREE "/%s/%s/%u", setting->owner,
@@ -135,8 +135,8 @@ bool dax_setting_is_dirty(const struct dax_setting *setting, uint16_t slot) {
 
 int dax_setting_check(const struct dax_setting *setting, uint16_t slot, const void *data,
                       size_t len) {
-    if (!setting || !setting->type || slot >= setting->count || !data || len == 0 ||
-        len > setting->size) {
+    if (!setting || !setting->type || setting->type->read_only || slot >= setting->count ||
+        !data || len == 0 || len > setting->size) {
         return -EINVAL;
     }
     const struct dax_setting_type *type = setting->type;
@@ -310,11 +310,11 @@ static const struct dax_setting *find_stored(const char *name, uint16_t *slot) {
             continue;
         }
         const char *rest = key + key_len;
-        if (setting->count == 1 && *rest == '\0') {
+        if (!setting->indexed && *rest == '\0') {
             *slot = 0;
             return setting;
         }
-        if (setting->count > 1 && *rest == '/') {
+        if (setting->indexed && *rest == '/') {
             /* Only the spelling a save writes: "07" or "+7" would be a second record for slot 7
              * that a reset could never delete. */
             const char *digits = rest + 1;

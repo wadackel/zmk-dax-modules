@@ -47,6 +47,6 @@ whose one-hour timeout becomes 65535ms, the most the storage holds.
   revision: <commit SHA>
 ```
 
-Settings registered here are edited with
-[daxial](https://github.com/wadackel/daxial) through the custom-settings
-Studio RPC.
+The features here are edited with [daxial](https://github.com/wadackel/daxial):
+the typed settings (trackball and gestures) through the `dax_settings` Studio
+RPC (`proto/dax/settings/settings.proto`), the combos through `dax_combo`.

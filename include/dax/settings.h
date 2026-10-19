@@ -5,8 +5,10 @@
  * The dax settings layer: values a feature edits at runtime, kept in RAM until saved. A setting
  * is an owner (the feature's subsystem id), a key and slots of up to `size` bytes, or unset. The
  * layer keeps bytes only: a feature decodes them, and gives its own default for an unset slot. A
- * value is not decoded while settings load, only when a feature reads it. In flash a slot is
- * "dax/<owner>/<key>", or "dax/<owner>/<key>/<slot>" when there are several.
+ * value is not decoded while settings load, only when a feature reads it. In flash a setting
+ * defined with one value is "dax/<owner>/<key>", and a slot of one defined with slots is
+ * "dax/<owner>/<key>/<slot>" whatever the count, so a count from the devicetree or Kconfig that
+ * changes to or from 1 still finds what was stored.
  *
  * A typed setting also says what its bytes are and what an unset slot means, so the dax_settings
  * Studio RPC can list, check and write it without knowing the feature. An untyped one (a combo
@@ -48,7 +50,8 @@ struct dax_setting_type {
     enum dax_setting_kind kind;
     int32_t min;
     int32_t max;
-    /* Writes and resets are refused: the value is the default, shown to a client only. */
+    /* The value is always the default, shown to a client only: a stored one is passed over, and
+     * the Studio RPC refuses writes and resets. */
     bool read_only;
     /* Writes the slot's default to buf and returns its length, or -ENOENT when it has none. A
      * slot with no value and no default reads as empty. Optional. */
@@ -61,6 +64,8 @@ struct dax_setting {
     const char *owner;
     const char *key;
     uint16_t count;
+    /* Defined with slots: every slot is stored under its number, even when there is one. */
+    bool indexed;
     uint16_t size;
     uint8_t *live;
     uint8_t *saved;
@@ -69,15 +74,23 @@ struct dax_setting {
     const struct dax_setting_type *type;
 };
 
-#define DAX_SETTING_DEFINE(_name, _owner, _key, _count, _size)                                     \
-    Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, _size, NULL)
+/* One value, slot 0. */
+#define DAX_SETTING_DEFINE(_name, _owner, _key, _size)                                             \
+    Z_DAX_SETTING_DEFINE(_name, _owner, _key, 1, false, _size, NULL)
+#define DAX_SETTING_DEFINE_SLOTS(_name, _owner, _key, _count, _size)                               \
+    Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, true, _size, NULL)
 
-#define DAX_SETTING_DEFINE_TYPED(_name, _owner, _key, _count, _size, _type)                        \
+#define DAX_SETTING_DEFINE_TYPED(_name, _owner, _key, _size, _type)                                \
+    Z_DAX_SETTING_TYPED(_name, _owner, _key, 1, false, _size, _type)
+#define DAX_SETTING_DEFINE_TYPED_SLOTS(_name, _owner, _key, _count, _size, _type)                  \
+    Z_DAX_SETTING_TYPED(_name, _owner, _key, _count, true, _size, _type)
+
+#define Z_DAX_SETTING_TYPED(_name, _owner, _key, _count, _indexed, _size, _type)                   \
     BUILD_ASSERT((_size) <= DAX_SETTING_TYPED_MAX_SIZE,                                            \
                  "a typed dax setting slot must fit DAX_SETTING_TYPED_MAX_SIZE");                  \
-    Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, _size, _type)
+    Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, _indexed, _size, _type)
 
-#define Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, _size, _type)                            \
+#define Z_DAX_SETTING_DEFINE(_name, _owner, _key, _count, _indexed, _size, _type)                  \
     BUILD_ASSERT((_count) >= 1, "a dax setting needs at least one slot");                          \
     BUILD_ASSERT((_size) >= 1 && (_size) <= CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE,               \
                  "a dax setting slot must fit CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE");            \
@@ -90,6 +103,7 @@ struct dax_setting {
         .owner = _owner,                                                                           \
         .key = _key,                                                                               \
         .count = _count,                                                                           \
+        .indexed = _indexed,                                                                       \
         .size = _size,                                                                             \
         .live = _name##_live,                                                                      \
         .saved = _name##_saved,                                                                    \
