@@ -19,8 +19,16 @@
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
+/* A macro may play another, itself included. Each play a step starts counts one deeper, and a
+ * play deeper than this is dropped: without it a macro that plays itself never ends. */
+#define MAX_NESTING 4
+/* Steps with no wait in between run back to back; after this many the work item gives way, so a
+ * long run of presses cannot hold the system work queue. */
+#define MAX_STEPS_AT_ONCE 64
+
 struct play {
     uint32_t slot;
+    uint8_t depth;
     struct zmk_behavior_binding_event event;
 };
 
@@ -33,6 +41,9 @@ static K_WORK_DELAYABLE_DEFINE(play_work, play_next);
  * while it plays does not change it. */
 static struct {
     bool active;
+    uint8_t depth;
+    /* A step of the macro is being invoked: a play it starts is nested in this one. */
+    bool in_step;
     struct zmk_behavior_binding_event event;
     uint8_t body[CONFIG_ZMK_DAX_MACRO_MAX_BYTES];
     size_t len;
@@ -48,7 +59,9 @@ static struct {
 static void invoke(const struct zmk_behavior_binding *binding, bool pressed) {
     struct zmk_behavior_binding_event event = player.event;
     event.timestamp = k_uptime_get();
+    player.in_step = true;
     zmk_behavior_invoke_binding(binding, event, pressed);
+    player.in_step = false;
 }
 
 static bool start(void) {
@@ -66,6 +79,7 @@ static bool start(void) {
             continue;
         }
         player.active = true;
+        player.depth = play.depth;
         player.event = play.event;
         player.len = len;
         player.offset = 0;
@@ -87,7 +101,9 @@ static void tap(const struct zmk_behavior_binding *binding) {
 static int64_t play_item(void) {
     struct zmk_behavior_binding binding;
     if (player.next_key < player.keys.key_count) {
-        dax_macro_key_binding(player.keys.keys[player.next_key++], &binding);
+        if (dax_macro_key_binding(player.keys.keys[player.next_key++], &binding) < 0) {
+            return -ENOENT;
+        }
         tap(&binding);
         return dax_macro_tap_ms();
     }
@@ -99,11 +115,15 @@ static int64_t play_item(void) {
     switch (step.kind) {
     case DAX_MACRO_STEP_DOWN:
     case DAX_MACRO_STEP_UP:
-        dax_macro_step_binding(&step, &binding);
+        if (dax_macro_step_binding(&step, &binding) < 0) {
+            return -ENOENT;
+        }
         invoke(&binding, step.kind == DAX_MACRO_STEP_DOWN);
         return 0;
     case DAX_MACRO_STEP_TAP:
-        dax_macro_step_binding(&step, &binding);
+        if (dax_macro_step_binding(&step, &binding) < 0) {
+            return -ENOENT;
+        }
         tap(&binding);
         return dax_macro_tap_ms();
     case DAX_MACRO_STEP_DELAY:
@@ -117,7 +137,11 @@ static int64_t play_item(void) {
 
 static void play_next(struct k_work *work) {
     ARG_UNUSED(work);
-    for (;;) {
+    for (int steps = 0;; steps++) {
+        if (steps == MAX_STEPS_AT_ONCE) {
+            k_work_reschedule(&play_work, K_NO_WAIT);
+            return;
+        }
         if (player.tapping) {
             player.tapping = false;
             invoke(&player.tapped, false);
@@ -141,7 +165,12 @@ int dax_macro_play(uint32_t slot, const struct zmk_behavior_binding_event *event
     if (slot >= CONFIG_ZMK_DAX_MACRO_COUNT) {
         return -ENOENT;
     }
-    struct play play = {.slot = slot, .event = *event};
+    struct play play = {
+        .slot = slot, .depth = player.in_step ? player.depth + 1 : 0, .event = *event};
+    if (play.depth > MAX_NESTING) {
+        LOG_WRN("dax macro: slot %u nested more than %d deep, not played", slot, MAX_NESTING);
+        return -ELOOP;
+    }
     if (k_msgq_put(&dax_macro_plays, &play, K_NO_WAIT) < 0) {
         LOG_WRN("dax macro: the play queue is full, dropped slot %u", slot);
         return -ENOSPC;

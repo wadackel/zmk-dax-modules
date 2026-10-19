@@ -342,9 +342,10 @@ bool dax_macro_is_unsaved(uint32_t slot) { return dax_setting_is_dirty(&dax_macr
 
 uint16_t dax_macro_tap_ms(void) {
     uint8_t buf[sizeof(uint16_t)];
-    return dax_setting_get(&dax_macro_tap, 0, buf, sizeof(buf)) == sizeof(buf)
-               ? sys_get_le16(buf)
-               : CONFIG_ZMK_DAX_MACRO_DEFAULT_TAP_MS;
+    bool stored = dax_setting_get(&dax_macro_tap, 0, buf, sizeof(buf)) == sizeof(buf);
+    /* A record of another firmware can hold more than a write lets through. */
+    return stored && sys_get_le16(buf) <= TAP_MS_MAX ? sys_get_le16(buf)
+                                                      : CONFIG_ZMK_DAX_MACRO_DEFAULT_TAP_MS;
 }
 
 static int check_name(const char *name) {
