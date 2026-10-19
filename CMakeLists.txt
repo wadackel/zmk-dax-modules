@@ -2,8 +2,6 @@
 # ZMK's own headers (zmk/ble.h, zmk/keymap.h, ...) are on the include path.
 target_sources_ifdef(CONFIG_ZMK_OS_LAYER app PRIVATE src/os_layer.c)
 target_sources_ifdef(CONFIG_ZMK_TRACKBALL_SETTINGS app PRIVATE src/trackball_settings.c)
-target_sources_ifdef(CONFIG_ZMK_DAX_MACRO_DEFAULTS app PRIVATE src/macro_defaults.c)
-target_sources_ifdef(CONFIG_ZMK_DAX_MACRO_DISCARD_TEST app PRIVATE src/test/macro_discard_test.c)
 target_sources_ifdef(CONFIG_ZMK_DAX_HOLD_MACRO app PRIVATE src/behaviors/behavior_hold_macro.c)
 
 target_include_directories(app PRIVATE include)

@@ -45,26 +45,11 @@ config ZMK_TRACKBALL_SETTINGS
     depends on PAW3222
     select ZMK_DAX_SETTINGS
 
-config ZMK_DAX_MACRO_DEFAULTS
-    bool "Discard puts a never-saved default runtime macro back to its devicetree body"
-    default y
-    depends on ZMK_RUNTIME_MACRO && ZMK_CUSTOM_SETTINGS_KEYSPACE
-
-config ZMK_DAX_MACRO_DISCARD_TEST
-    bool "Edit and discard a default runtime macro shortly after boot (tests only)"
-    default n
-    depends on ZMK_RUNTIME_MACRO
-
-config ZMK_DAX_MACRO_DISCARD_TEST_NAME
-    string "Name of the default macro the test edits"
-    default "esc_lang2"
-    depends on ZMK_DAX_MACRO_DISCARD_TEST
-
 config ZMK_DAX_HOLD_MACRO
-    bool "Behavior that plays one runtime macro on press and another on release"
+    bool "Behavior that plays one dax macro on press and another on release"
     default y
     depends on DT_HAS_DAX_BEHAVIOR_HOLD_MACRO_ENABLED
-    depends on ZMK_RUNTIME_MACRO
+    depends on ZMK_DAX_MACRO
 
 config ZMK_DAX_SETTINGS
     bool
