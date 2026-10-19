@@ -54,7 +54,10 @@ struct macro_default {
 
 #define DT_DRV_COMPAT dax_runtime_macro_defaults
 
-#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
+BUILD_ASSERT(DT_NUM_INST_STATUS_OKAY(DT_DRV_COMPAT) <= 1,
+             "only one dax,runtime-macro-defaults node is read");
+
+#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT) && DT_INST_CHILD_NUM(0) > 0
 
 #define DEFAULT_NAME(n) DT_PROP_OR(n, macro_name, DT_NODE_FULL_NAME(n))
 
