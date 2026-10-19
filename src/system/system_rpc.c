@@ -6,7 +6,6 @@
  * the UF2 bootloader, so a host can restart it or copy a new firmware on without a key press.
  */
 
-#include <errno.h>
 #include <stdio.h>
 
 #include <pb_decode.h>
@@ -46,19 +45,15 @@ static bool to_bootloader;
 /* The same two paths as ZMK's &bootloader and &sys_reset (app/src/behaviors/behavior_reset.c). */
 static void reboot_work_handler(struct k_work *work) {
     ARG_UNUSED(work);
-    if (!to_bootloader) {
-        sys_reboot(SYS_REBOOT_WARM);
-        return;
-    }
 #if IS_ENABLED(CONFIG_RETENTION_BOOT_MODE)
-    int ret = bootmode_set(BOOT_MODE_TYPE_BOOTLOADER);
+    int ret = bootmode_set(to_bootloader ? BOOT_MODE_TYPE_BOOTLOADER : BOOT_MODE_TYPE_NORMAL);
     if (ret < 0) {
-        LOG_ERR("dax_system: setting the bootloader mode failed (%d)", ret);
+        LOG_ERR("dax_system: setting the boot mode failed (%d)", ret);
         return;
     }
     sys_reboot(SYS_REBOOT_WARM);
 #else
-    sys_reboot(DAX_SYSTEM_REBOOT_UF2);
+    sys_reboot(to_bootloader ? DAX_SYSTEM_REBOOT_UF2 : SYS_REBOOT_WARM);
 #endif
 }
 
