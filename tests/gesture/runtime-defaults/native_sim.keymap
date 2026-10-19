@@ -1,6 +1,6 @@
 #include "../common.dtsi"
 
-/* The `profiles` scenario again, with the gestures served from custom settings: nothing is
+/* The `profiles` scenario again, with the gestures served from the dax settings: nothing is
  * stored, so the devicetree defaults must come through unchanged. */
 
 /* An always-on profile on layer 0 that lets the pointer move, and a profile on a held layer that
