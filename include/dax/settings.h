@@ -6,9 +6,9 @@
  * is an owner (the feature's subsystem id), a key and slots of up to `size` bytes, or unset. The
  * layer keeps bytes only: a feature decodes them, and gives its own default for an unset slot. A
  * value is not decoded while settings load, only when a feature reads it. In flash a setting
- * defined with one value is "dax/<owner>/<key>", and a slot of one defined with slots is
- * "dax/<owner>/<key>/<slot>" whatever the count, so a count from the devicetree or Kconfig that
- * changes to or from 1 still finds what was stored.
+ * defined with one value is "dax/<owner>/<key>"; each slot of a setting defined with slots is
+ * "dax/<owner>/<key>/<slot>" even when there is one, so a count from the devicetree or Kconfig
+ * that changes to or from 1 still finds what was stored.
  *
  * A typed setting also says what its bytes are and what an unset slot means, so the dax_settings
  * Studio RPC can list, check and write it without knowing the feature. An untyped one (a combo

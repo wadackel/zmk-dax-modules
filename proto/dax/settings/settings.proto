@@ -28,6 +28,9 @@
 //                                        param1 (4), param2 (4)
 //                              1 byte    0xFE: no gesture, the devicetree's included
 //                              empty     a free slot (no value and no default)
+//                            A write is refused unless the profile exists, the pattern has 1 to 8
+//                            strokes with none repeated in a row, and the binding passes the check
+//                            a keymap binding does.
 //
 // Every default above comes from the devicetree.
 syntax = "proto3";

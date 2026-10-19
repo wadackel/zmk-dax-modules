@@ -194,7 +194,7 @@ static struct dax_gesture_slot read_slot(uint16_t index) {
     const char *behavior =
         len == SLOT_SIZE ? zmk_behavior_find_behavior_name_from_local_id(sys_get_le16(&value[5]))
                          : NULL;
-    /* A removed or free slot, or a behavior this build lacks: nothing to tap. */
+    /* A removed or free slot: nothing to tap. */
     if (!behavior) {
         return (struct dax_gesture_slot){.profile = DAX_GESTURE_NO_PROFILE};
     }
