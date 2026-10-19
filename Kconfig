@@ -31,6 +31,14 @@ config ZMK_OS_LAYER_PROFILE_4
 
 endif
 
+config ZMK_DAX_SYSTEM_RPC
+    bool "Reboot the keyboard, normally or into the bootloader, over custom Studio RPC"
+    default n
+    depends on ZMK_STUDIO
+    help
+      The dax_system subsystem. Anyone the Studio RPC answers can then reboot the
+      keyboard into its UF2 bootloader, so it is off unless a keyboard asks for it.
+
 config ZMK_TRACKBALL_SETTINGS
     bool "Runtime trackball sensor settings (CPI) through custom settings"
     default n

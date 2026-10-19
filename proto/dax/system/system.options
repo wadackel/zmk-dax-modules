@@ -1,0 +1,7 @@
+# Copyright (c) 2026 wadackel
+#
+# SPDX-License-Identifier: MIT
+#
+# Nanopb options file for system.proto.
+
+dax.system.ErrorResponse.message             max_size:64

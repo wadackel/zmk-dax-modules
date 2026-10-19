@@ -1,0 +1,41 @@
+// Copyright (c) 2026 wadackel
+//
+// SPDX-License-Identifier: MIT
+//
+// The dax_system custom Studio subsystem: requests about the keyboard itself rather than one of
+// its features.
+syntax = "proto3";
+
+package dax.system;
+
+enum RebootMode {
+    // Restart the firmware, as &sys_reset does.
+    REBOOT_MODE_RESTART = 0;
+    // Restart into the UF2 bootloader, as &bootloader does, so a new firmware can be copied on.
+    REBOOT_MODE_BOOTLOADER = 1;
+}
+
+// The keyboard answers first and reboots a moment later, so the answer reaches the host before the
+// port goes away.
+message RebootRequest {
+    RebootMode mode = 1;
+}
+
+message Request {
+    oneof request_type {
+        RebootRequest reboot = 1;
+    }
+}
+
+message RebootResponse {}
+
+message ErrorResponse {
+    string message = 1;
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        RebootResponse reboot = 2;
+    }
+}

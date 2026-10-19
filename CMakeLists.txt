@@ -8,6 +8,14 @@ target_sources_ifdef(CONFIG_ZMK_DAX_HOLD_MACRO app PRIVATE src/behaviors/behavio
 
 target_include_directories(app PRIVATE include)
 
+# The wire definitions of every enabled RPC, generated together at the end of this file: a second
+# zephyr_library() in this directory would collide with the first.
+set(dax_protos)
+if(CONFIG_ZMK_DAX_SYSTEM_RPC)
+  target_sources(app PRIVATE src/system/system_rpc.c)
+  list(APPEND dax_protos ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/system/system.proto)
+endif()
+
 if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL))
   target_sources(app PRIVATE
     src/gesture/gesture_core.c
@@ -24,21 +32,7 @@ if(CONFIG_ZMK_DAX_COMBO)
 
   if(CONFIG_ZMK_DAX_COMBO_STUDIO_RPC)
     target_sources(app PRIVATE src/combo/combo_rpc.c)
-
-    list(APPEND CMAKE_MODULE_PATH ${ZEPHYR_BASE}/modules/nanopb)
-    include(nanopb)
-    set(NANOPB_GENERATE_CPP_APPEND_PATH TRUE)
-    set(NANOPB_GENERATE_CPP_STANDALONE OFF)
-
-    # The generated sources go in a library of their own: added to app directly, they break the
-    # build.
-    zephyr_library()
-    nanopb_generate_cpp(proto_srcs proto_hdrs RELPATH ${CMAKE_CURRENT_SOURCE_DIR}
-                        ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/combo/combo.proto)
-    target_include_directories(${ZEPHYR_CURRENT_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
-    target_sources(${ZEPHYR_CURRENT_LIBRARY} PRIVATE ${proto_srcs} ${proto_hdrs})
-    target_include_directories(app PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/proto)
-    add_dependencies(app ${ZEPHYR_CURRENT_LIBRARY})
+    list(APPEND dax_protos ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/combo/combo.proto)
   endif()
 
   # ZMK dispatches an event to its listeners in link order, and module sources are added to app
@@ -60,4 +54,20 @@ if(CONFIG_ZMK_DAX_COMBO)
     set_property(TARGET app PROPERTY SOURCES "${sources}")
   endfunction()
   cmake_language(DEFER DIRECTORY ${APPLICATION_SOURCE_DIR} CALL dax_place_combo_engine)
+endif()
+
+if(dax_protos)
+  list(APPEND CMAKE_MODULE_PATH ${ZEPHYR_BASE}/modules/nanopb)
+  include(nanopb)
+  set(NANOPB_GENERATE_CPP_APPEND_PATH TRUE)
+  set(NANOPB_GENERATE_CPP_STANDALONE OFF)
+
+  # The generated sources go in a library of their own: added to app directly, they break the
+  # build.
+  zephyr_library()
+  nanopb_generate_cpp(proto_srcs proto_hdrs RELPATH ${CMAKE_CURRENT_SOURCE_DIR} ${dax_protos})
+  target_include_directories(${ZEPHYR_CURRENT_LIBRARY} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+  target_sources(${ZEPHYR_CURRENT_LIBRARY} PRIVATE ${proto_srcs} ${proto_hdrs})
+  target_include_directories(app PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/proto)
+  add_dependencies(app ${ZEPHYR_CURRENT_LIBRARY})
 endif()
