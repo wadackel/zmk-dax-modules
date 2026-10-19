@@ -11,8 +11,8 @@
 #include <errno.h>
 
 #include <zephyr/kernel.h>
-#include <zephyr/settings/settings.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/settings/settings.h>
 
 #include <dax/combo.h>
 #include <dax/settings.h>
@@ -105,7 +105,8 @@ static int setup(void) {
 
     /* What another firmware could have left: a record too big for a slot, and slot 7 spelt "07". */
     static const uint8_t too_big[CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE + 1];
-    ret = ret ?: settings_save_one("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/6", too_big, sizeof(too_big));
+    ret = ret ?:
+          settings_save_one("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/6", too_big, sizeof(too_big));
     ret = ret ?: settings_save_one("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/07", too_big, 30);
 
     ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);

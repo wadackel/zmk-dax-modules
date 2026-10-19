@@ -56,7 +56,8 @@ static void raise_changed(const char *owner) {
 
 static int storage_name(const struct dax_setting *setting, uint16_t slot, char *name, size_t size) {
     int len = setting->count == 1
-                  ? snprintf(name, size, DAX_SETTINGS_SUBTREE "/%s/%s", setting->owner, setting->key)
+                  ? snprintf(name, size, DAX_SETTINGS_SUBTREE "/%s/%s", setting->owner,
+                             setting->key)
                   : snprintf(name, size, DAX_SETTINGS_SUBTREE "/%s/%s/%u", setting->owner,
                              setting->key, slot);
     return len < 0 || (size_t)len >= size ? -ENAMETOOLONG : 0;
@@ -91,7 +92,8 @@ bool dax_setting_is_set(const struct dax_setting *setting, uint16_t slot) {
     return set;
 }
 
-int dax_setting_set(const struct dax_setting *setting, uint16_t slot, const void *data, size_t len) {
+int dax_setting_set(const struct dax_setting *setting, uint16_t slot, const void *data,
+                    size_t len) {
     /* An empty value would be stored as a deletion: NVS treats a zero-length write as one. */
     if (!setting || slot >= setting->count || len == 0 || !data) {
         return -EINVAL;
@@ -213,7 +215,7 @@ int dax_settings_discard(const char *owner, uint32_t *changed) {
     return 0;
 }
 
-/* Finds the setting and slot a stored name ("<owner>/<key>" or "<owner>/<key>/<slot>") belongs to. */
+/* Finds the setting and slot a stored "<owner>/<key>" or "<owner>/<key>/<slot>" belongs to. */
 static const struct dax_setting *find_stored(const char *name, uint16_t *slot) {
     STRUCT_SECTION_FOREACH(dax_setting, setting) {
         size_t owner_len = strlen(setting->owner);

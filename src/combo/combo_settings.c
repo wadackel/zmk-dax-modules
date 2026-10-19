@@ -53,8 +53,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
     (RECORD_HEADER_SIZE + CONFIG_ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO * sizeof(uint16_t) +            \
      DAX_COMBO_NAME_MAX)
 
-DAX_SETTING_DEFINE(dax_combo_slots, DAX_COMBO_SUBSYSTEM_ID, "combo", CONFIG_ZMK_DAX_COMBO_MAX_COMBOS,
-                   RECORD_MAX_SIZE);
+DAX_SETTING_DEFINE(dax_combo_slots, DAX_COMBO_SUBSYSTEM_ID, "combo",
+                   CONFIG_ZMK_DAX_COMBO_MAX_COMBOS, RECORD_MAX_SIZE);
 DAX_SETTING_DEFINE(dax_combo_timeout, DAX_COMBO_SUBSYSTEM_ID, "timeout_ms", 1, sizeof(uint16_t));
 DAX_SETTING_DEFINE(dax_combo_slow_release, DAX_COMBO_SUBSYSTEM_ID, "slow_release", 1, 1);
 DAX_SETTING_DEFINE(dax_combo_prior_idle, DAX_COMBO_SUBSYSTEM_ID, "require_prior_idle_ms", 1,
@@ -140,7 +140,8 @@ struct record {
 };
 
 static void resolve_behavior(struct dax_combo_config *config) {
-    config->behavior.behavior_dev = zmk_behavior_find_behavior_name_from_local_id(config->behavior_id);
+    config->behavior.behavior_dev =
+        zmk_behavior_find_behavior_name_from_local_id(config->behavior_id);
 #if IS_ENABLED(CONFIG_ZMK_BEHAVIOR_LOCAL_IDS_IN_BINDINGS)
     config->behavior.local_id = config->behavior_id;
 #endif
@@ -180,7 +181,8 @@ static int decode(const uint8_t *in, size_t len, struct record *record) {
     }
     uint8_t keys = in[2];
     uint8_t name_len = in[3];
-    if (keys < 1 || keys > CONFIG_ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO || name_len > DAX_COMBO_NAME_MAX ||
+    if (keys < 1 || keys > CONFIG_ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO ||
+        name_len > DAX_COMBO_NAME_MAX ||
         len != RECORD_HEADER_SIZE + keys * sizeof(uint16_t) + name_len) {
         return -EBADMSG;
     }

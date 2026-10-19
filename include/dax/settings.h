@@ -47,7 +47,7 @@ struct dax_setting {
     static uint8_t _name##_live[(_count) * (_size)];                                               \
     static uint8_t _name##_saved[(_count) * (_size)];                                              \
     static struct dax_setting_slot _name##_slots[_count];                                          \
-    const STRUCT_SECTION_ITERABLE(dax_setting, _name) = {                                                \
+    const STRUCT_SECTION_ITERABLE(dax_setting, _name) = {                                          \
         .owner = _owner,                                                                           \
         .key = _key,                                                                               \
         .count = _count,                                                                           \
@@ -60,7 +60,8 @@ struct dax_setting {
 /* The slot's length, or -ENOENT when it is unset, -ENOSPC when `buf` is too small. */
 int dax_setting_get(const struct dax_setting *setting, uint16_t slot, void *buf, size_t buf_size);
 bool dax_setting_is_set(const struct dax_setting *setting, uint16_t slot);
-/* RAM only; the slot differs from flash until the owner is saved or discarded. */
+/* RAM only; the slot differs from flash until the owner is saved or discarded. `len` is at least
+ * 1: an empty value would be stored as a deletion. */
 int dax_setting_set(const struct dax_setting *setting, uint16_t slot, const void *data, size_t len);
 int dax_setting_unset(const struct dax_setting *setting, uint16_t slot);
 
@@ -79,7 +80,7 @@ int dax_settings_test_reload(const char *owner);
 struct dax_settings_loaded {};
 ZMK_EVENT_DECLARE(dax_settings_loaded);
 
-/* Raised after a write, a save or a discard changed an owner's values, from the thread that did it. */
+/* Raised after a write, a save or a discard changed an owner's values, on the writing thread. */
 struct dax_setting_changed {
     const char *owner;
 };
