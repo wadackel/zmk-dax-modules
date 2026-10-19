@@ -19,6 +19,7 @@
 #include <zephyr/sys/util.h>
 
 #include <dax/settings.h>
+#include <drivers/behavior.h>
 #include <zmk/behavior.h>
 #include <zmk/event_manager.h>
 
