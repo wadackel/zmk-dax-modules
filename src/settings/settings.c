@@ -358,8 +358,10 @@ static int dax_settings_handle_set(const char *name, size_t len, settings_read_c
         return 0;
     }
 
-    /* Read aside first, so a failed read leaves the slot as it was. */
-    uint8_t value[CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE];
+    /* Read aside first, so a failed read leaves the slot as it was. Static rather than on the
+     * stack of the thread that loads settings, which a macro record would crowd; the settings
+     * lock lets one load run at a time. */
+    static uint8_t value[CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE];
     ssize_t read = read_cb(cb_arg, value, len);
     if (read < 0) {
         return read;
