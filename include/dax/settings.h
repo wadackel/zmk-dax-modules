@@ -2,14 +2,11 @@
  * Copyright (c) 2026 wadackel
  * SPDX-License-Identifier: MIT
  *
- * The dax settings layer: values a feature edits at runtime, kept in RAM until saved.
- *
- * A setting is an owner (the feature's subsystem id), a key and a number of slots, each holding
- * up to `size` bytes or nothing ("unset"). The layer stores bytes only; a feature decodes them,
- * and gives its own default for an unset slot. Writes change RAM, a save writes the slots that
- * differ from what was last saved, and a discard puts RAM back to that. In flash a slot is the
- * Zephyr setting "dax/<owner>/<key>", or "dax/<owner>/<key>/<slot>" when there are several.
- * Nothing is checked while settings load: a value is decoded when it is read.
+ * The dax settings layer: values a feature edits at runtime, kept in RAM until saved. A setting
+ * is an owner (the feature's subsystem id), a key and slots of up to `size` bytes, or unset. The
+ * layer keeps bytes only: a feature decodes them, and gives its own default for an unset slot. A
+ * value is not decoded while settings load, only when a feature reads it. In flash a slot is
+ * "dax/<owner>/<key>", or "dax/<owner>/<key>/<slot>" when there are several.
  */
 
 #pragma once
@@ -50,7 +47,7 @@ struct dax_setting {
     static uint8_t _name##_live[(_count) * (_size)];                                               \
     static uint8_t _name##_saved[(_count) * (_size)];                                              \
     static struct dax_setting_slot _name##_slots[_count];                                          \
-    STRUCT_SECTION_ITERABLE(dax_setting, _name) = {                                                \
+    const STRUCT_SECTION_ITERABLE(dax_setting, _name) = {                                                \
         .owner = _owner,                                                                           \
         .key = _key,                                                                               \
         .count = _count,                                                                           \

@@ -11,6 +11,7 @@
 #include <errno.h>
 
 #include <zephyr/kernel.h>
+#include <zephyr/settings/settings.h>
 #include <zephyr/logging/log.h>
 
 #include <dax/combo.h>
@@ -64,7 +65,7 @@ static int setup(void) {
     return ret ?: dax_combo_reset(4);
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_DISCARD)
-/* Both writes are memory only, so a discard reverts them to empty slots. */
+/* Neither write is saved, so a discard reverts both to empty slots. */
 static int setup(void) {
     int ret = write_combo(0, B, (const int32_t[]){0, 1}, 2, 0, 0);
     ret = ret ?: write_combo(1, C, (const int32_t[]){2, 3}, 2, 0, 0);
@@ -77,31 +78,47 @@ static int setup(void) {
     return ret ?: write_combo(1, C, (const int32_t[]){1, 2}, 2, 0, 0);
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_RELOAD)
-/* The flash file of native_sim outlives a run, so the slot is emptied in flash first. Each step
- * logs what slot 0 reads after the combos were read from flash again. */
-static void log_slot(const char *step) {
+/* The flash file of native_sim outlives a run, so the slots are emptied in flash first. Each step
+ * logs what a slot reads after the combos were read from flash again. */
+static void log_slot(const char *step, uint32_t slot) {
     struct dax_combo_config combo;
-    int ret = dax_combo_read(0, &combo);
+    int ret = dax_combo_read(slot, &combo);
     if (ret < 0) {
-        LOG_INF("combo test: %s: slot 0 read %d", step, ret);
+        LOG_INF("combo test: %s: slot %u read %d", step, slot, ret);
         return;
     }
-    LOG_INF("combo test: %s: slot 0 keys %d %d binding %s 0x%x", step, combo.key_positions[0],
-            combo.key_positions[1], combo.behavior.behavior_dev ? "resolved" : "unresolved",
-            combo.behavior.param1);
+    LOG_INF("combo test: %s: slot %u keys %d %d binding %s 0x%x", step, slot,
+            combo.key_positions[0], combo.key_positions[1],
+            combo.behavior.behavior_dev ? "resolved" : "unresolved", combo.behavior.param1);
 }
 
 static int setup(void) {
     uint32_t written = 0;
     int ret = dax_combo_reset(0);
+    ret = ret ?: dax_combo_reset(6);
     ret = ret ?: dax_combo_save(NULL);
     ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);
-    log_slot("emptied");
+    log_slot("emptied", 0);
     ret = ret ?: write_combo(0, B, (const int32_t[]){0, 1}, 2, 0, 0);
     ret = ret ?: dax_combo_save(&written);
     LOG_INF("combo test: saved %u record(s)", written);
+
+    /* What another firmware could have left: a record too big for a slot, and slot 7 spelt "07". */
+    static const uint8_t too_big[CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE + 1];
+    ret = ret ?: settings_save_one("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/6", too_big, sizeof(too_big));
+    ret = ret ?: settings_save_one("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/07", too_big, 30);
+
     ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);
-    log_slot("reloaded");
+    log_slot("reloaded", 0);
+    log_slot("reloaded", 6);
+    log_slot("reloaded", 7);
+
+    ret = ret ?: dax_combo_reset(6);
+    ret = ret ?: dax_combo_save(&written);
+    LOG_INF("combo test: saved %u record(s)", written);
+    ret = ret ?: dax_settings_test_reload(DAX_COMBO_SUBSYSTEM_ID);
+    log_slot("cleared", 6);
+    ret = ret ?: settings_delete("dax/" DAX_COMBO_SUBSYSTEM_ID "/combo/07");
     return ret;
 }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_COMBO_TEST_PENDING)

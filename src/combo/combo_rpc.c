@@ -124,6 +124,12 @@ static int fill_combo_message(uint32_t index, dax_combo_Combo *message) {
     return 0;
 }
 
+/* The list response holds a fixed number of combos and of keys per combo (combo.options). */
+BUILD_ASSERT(CONFIG_ZMK_DAX_COMBO_MAX_COMBOS <= ARRAY_SIZE(((dax_combo_ListCombosResponse *)0)->combos),
+             "a combo list response cannot hold every slot");
+BUILD_ASSERT(CONFIG_ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO <= ARRAY_SIZE(((dax_combo_Combo *)0)->key_positions),
+             "a combo response cannot hold every key position");
+
 static int handle_list_combos(dax_combo_Response *resp) {
     dax_combo_ListCombosResponse result = dax_combo_ListCombosResponse_init_zero;
     uint32_t count = dax_combo_max_count();

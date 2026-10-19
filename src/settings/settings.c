@@ -4,6 +4,7 @@
  */
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,8 +22,8 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 ZMK_EVENT_IMPL(dax_settings_loaded);
 ZMK_EVENT_IMPL(dax_setting_changed);
 
-/* Guards every slot's state and bytes. Never held across a settings_* call: settings_load holds
- * its own lock while it calls dax_settings_set below, which takes this one. */
+/* Guards every slot's state and bytes. A save lets go of it before settings_save_one, because
+ * settings_load holds the settings lock while dax_settings_handle_set below takes this one. */
 static K_MUTEX_DEFINE(state_lock);
 /* One save at a time, so the scratch copy below is never shared. */
 static K_MUTEX_DEFINE(save_lock);
@@ -91,7 +92,8 @@ bool dax_setting_is_set(const struct dax_setting *setting, uint16_t slot) {
 }
 
 int dax_setting_set(const struct dax_setting *setting, uint16_t slot, const void *data, size_t len) {
-    if (!setting || slot >= setting->count || (len > 0 && !data)) {
+    /* An empty value would be stored as a deletion: NVS treats a zero-length write as one. */
+    if (!setting || slot >= setting->count || len == 0 || !data) {
         return -EINVAL;
     }
     if (len > setting->size) {
@@ -228,10 +230,17 @@ static const struct dax_setting *find_stored(const char *name, uint16_t *slot) {
             *slot = 0;
             return setting;
         }
-        if (setting->count > 1 && *rest == '/' && rest[1] != '\0') {
-            char *end;
-            unsigned long index = strtoul(rest + 1, &end, 10);
-            if (*end == '\0' && index < setting->count) {
+        if (setting->count > 1 && *rest == '/') {
+            /* Only the spelling a save writes: "07" or "+7" would be a second record for slot 7
+             * that a reset could never delete. */
+            const char *digits = rest + 1;
+            bool canonical = digits[0] >= '1' && digits[0] <= '9';
+            canonical = canonical || (digits[0] == '0' && digits[1] == '\0');
+            for (const char *c = digits; canonical && *c != '\0'; c++) {
+                canonical = *c >= '0' && *c <= '9';
+            }
+            unsigned long index = canonical ? strtoul(digits, NULL, 10) : ULONG_MAX;
+            if (index < setting->count) {
                 *slot = index;
                 return setting;
             }
@@ -242,6 +251,11 @@ static const struct dax_setting *find_stored(const char *name, uint16_t *slot) {
 
 static int dax_settings_handle_set(const char *name, size_t len, settings_read_cb read_cb,
                                    void *cb_arg) {
+    /* Zephyr passes no name for a record called just "dax". */
+    if (!name) {
+        LOG_WRN("dax settings: ignoring %s", DAX_SETTINGS_SUBTREE);
+        return 0;
+    }
     uint16_t slot;
     const struct dax_setting *setting = find_stored(name, &slot);
     if (!setting) {
@@ -250,23 +264,30 @@ static int dax_settings_handle_set(const char *name, size_t len, settings_read_c
         return 0;
     }
     if (len > setting->size) {
-        LOG_WRN("dax settings: %s/%s is %u bytes, more than %u; ignored", DAX_SETTINGS_SUBTREE,
+        /* Kept as a slot that is set but holds nothing a feature can read, as a record of the
+         * wrong version is, so a reset and a save delete it. */
+        LOG_WRN("dax settings: %s/%s is %u bytes, more than %u; unreadable", DAX_SETTINGS_SUBTREE,
                 name, (unsigned)len, setting->size);
+        k_mutex_lock(&state_lock, K_FOREVER);
+        setting->slots[slot] = (struct dax_setting_slot){.live_set = true, .saved_set = true};
+        k_mutex_unlock(&state_lock);
         return 0;
     }
 
-    k_mutex_lock(&state_lock, K_FOREVER);
-    ssize_t read = read_cb(cb_arg, saved_bytes(setting, slot), len);
-    struct dax_setting_slot *state = &setting->slots[slot];
-    if (read >= 0) {
-        state->saved_set = true;
-        state->saved_len = read;
-        state->live_set = true;
-        state->live_len = read;
-        memcpy(live_bytes(setting, slot), saved_bytes(setting, slot), read);
+    /* Read aside first, so a failed read leaves the slot as it was. */
+    uint8_t value[CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE];
+    ssize_t read = read_cb(cb_arg, value, len);
+    if (read < 0) {
+        return read;
     }
+    k_mutex_lock(&state_lock, K_FOREVER);
+    struct dax_setting_slot *state = &setting->slots[slot];
+    *state = (struct dax_setting_slot){
+        .live_len = read, .saved_len = read, .live_set = true, .saved_set = true};
+    memcpy(saved_bytes(setting, slot), value, read);
+    memcpy(live_bytes(setting, slot), value, read);
     k_mutex_unlock(&state_lock);
-    return read < 0 ? read : 0;
+    return 0;
 }
 
 static bool loaded;

@@ -221,7 +221,7 @@ static int read_record(uint32_t index, struct record *record) {
     if (len >= 0) {
         int ret = decode(buf, len, record);
         if (ret < 0) {
-            LOG_WRN("combo slot %u: stored record unreadable, treated as empty", index);
+            LOG_DBG("combo slot %u: stored record unreadable, treated as empty", index);
         }
         return ret;
     }
@@ -405,7 +405,6 @@ bool dax_combo_has_override(uint32_t index) {
     return index < CONFIG_ZMK_DAX_COMBO_MAX_COMBOS && dax_setting_is_set(&dax_combo_slots, index);
 }
 
-/* The listener runs inside the write that raised the event, so the rebuild goes to the work queue. */
 static int dax_combo_settings_listener(const zmk_event_t *eh) {
     const struct dax_setting_changed *changed = as_dax_setting_changed(eh);
     if (changed == NULL || strcmp(changed->owner, DAX_COMBO_SUBSYSTEM_ID) == 0) {
