@@ -114,7 +114,7 @@ static void activate_work_handler(struct k_work *work) {
     if (data->layer_active) {
         return;
     }
-    uint8_t position;
+    uint8_t position = UINT8_MAX;
     K_SPINLOCK(&data->lock) {
         position = data->values.temp_layer_on ? data->values.temp_layer : UINT8_MAX;
     }
@@ -172,8 +172,8 @@ static int pointer_handle_event(const struct device *dev, struct input_event *ev
     }
 
     struct dax_pointer_values values;
-    int32_t cos_1000;
-    int32_t sin_1000;
+    int32_t cos_1000 = 1000;
+    int32_t sin_1000 = 0;
     K_SPINLOCK(&data->lock) {
         values = data->values;
         cos_1000 = data->cos_1000;
@@ -265,27 +265,26 @@ static int pointer_init(const struct device *dev) {
     return 0;
 }
 
-#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(trans))
-#define TRANSPARENT DEVICE_DT_GET(DT_NODELABEL(trans))
-#else
-#define TRANSPARENT NULL
-#endif
-#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(kp))
-#define KEY_PRESS DEVICE_DT_GET(DT_NODELABEL(kp))
-#else
-#define KEY_PRESS NULL
-#endif
-
+/* A keymap that never names &trans or &kp drops the node, and then no key can be bound to it. */
 static bool is_transparent(const struct zmk_behavior_binding *binding) {
-    return TRANSPARENT && zmk_behavior_get_binding(binding->behavior_dev) == TRANSPARENT;
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(trans))
+    return zmk_behavior_get_binding(binding->behavior_dev) ==
+           DEVICE_DT_GET(DT_NODELABEL(trans));
+#else
+    return false;
+#endif
 }
 
 static bool plays_modifier(const struct zmk_behavior_binding *binding) {
-    if (!KEY_PRESS || zmk_behavior_get_binding(binding->behavior_dev) != KEY_PRESS) {
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(kp))
+    if (zmk_behavior_get_binding(binding->behavior_dev) != DEVICE_DT_GET(DT_NODELABEL(kp))) {
         return false;
     }
     uint16_t page = ZMK_HID_USAGE_PAGE(binding->param1);
     return is_mod(page ? page : HID_USAGE_KEY, ZMK_HID_USAGE_ID(binding->param1));
+#else
+    return false;
+#endif
 }
 
 /* What the key does with the layers that are on now: the binding of the highest one that is not

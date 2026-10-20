@@ -114,7 +114,7 @@ config ZMK_DAX_POINTER_TEST_RELOAD
 
 config ZMK_DAX_POINTER_TEST_REORDER
     bool "Moves the layers so that positions and ids differ"
-    select ZMK_KEYMAP_LAYER_REORDERING
+    depends on ZMK_KEYMAP_LAYER_REORDERING
 
 endchoice
 

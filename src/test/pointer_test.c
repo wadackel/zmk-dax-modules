@@ -21,6 +21,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
 static void log_result(const char *what, int ret) { LOG_INF("pointer test: %s: %d", what, ret); }
 
+#if !IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_REORDER)
 static const struct dax_setting *find(const char *key) {
     STRUCT_SECTION_FOREACH(dax_setting, setting) {
         if (strcmp(setting->owner, DAX_POINTER_SUBSYSTEM_ID) == 0 &&
@@ -46,6 +47,7 @@ static int write_bool(const char *key, bool value) {
     int ret = setting ? dax_setting_check(setting, 0, &byte, 1) : -ENOENT;
     return ret ?: dax_setting_set(setting, 0, &byte, 1);
 }
+#endif
 
 #if IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD)
 /* tests/pointer/edit-discard reports X 2 at 1000 ms and again at 2000 ms. */
