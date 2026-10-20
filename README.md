@@ -31,9 +31,10 @@ tests/gesture_core/run.sh
 
 The directories under `tests/gesture/`, `tests/hold-macro/`, `tests/macro/`, `tests/pointer/`,
 `tests/encoder/`, `tests/combo/` and `tests/combo-zmk/` are ZMK `native_sim` tests: a keymap,
-mocked key, pointer and encoder input, and the HID reports expected from them. They run from a west workspace that has this module checked out, the
-same way ZMK's own tests do (`west build -b native_sim//zmk_test_mock` with
-`-DZMK_CONFIG=<test dir>`). `zmk-config-dax6` has a runner for them (`tests/run.sh`).
+mocked key, pointer and encoder input, and the HID reports expected from them. They run from a
+west workspace that has this module checked out, the same way ZMK's own tests do (`west build -b
+native_sim//zmk_test_mock` with `-DZMK_CONFIG=<test dir>`). `zmk-config-dax6` has a runner for
+them (`tests/run.sh`).
 
 `tests/combo-zmk/` is ZMK's own `app/tests/combo/` with the compatible changed to
 `dax,runtime-combo-defaults` and the snapshots kept, so it fails if the combo engine stops matching
