@@ -40,6 +40,11 @@ if(CONFIG_ZMK_DAX_POINTER)
   target_sources_ifdef(CONFIG_ZMK_DAX_POINTER_TEST app PRIVATE src/test/pointer_test.c)
 endif()
 
+if(CONFIG_ZMK_DAX_ENCODER)
+  target_sources(app PRIVATE src/encoder/encoder.c)
+  target_sources_ifdef(CONFIG_ZMK_DAX_ENCODER_TEST app PRIVATE src/test/encoder_test.c)
+endif()
+
 if(CONFIG_ZMK_DAX_MACRO)
   target_sources(app PRIVATE
     src/macro/macro_body.c

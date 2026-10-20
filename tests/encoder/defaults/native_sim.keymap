@@ -1,0 +1,32 @@
+#include "../common.dtsi"
+
+// Layer 0 plays dax_enc_ab, layer 1 (never active) ZMK's &inc_dec_kp, layer 2 dax_enc_cd. The
+// encoder turns clockwise and back at 1000 and 1200 ms (A, B), &tog 2 at 1300 ms holds layer 2,
+// and the same turns at 1400 and 1600 ms play C and D: the defaults are found by layer id across
+// a layer that binds something else.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&tog 2 &none &none &none>;
+            sensor-bindings = <&dax_enc_ab>;
+        };
+        other_layer {
+            bindings = <&trans &trans &trans &trans>;
+            sensor-bindings = <&inc_dec_kp N M>;
+        };
+        cd_layer {
+            bindings = <&trans &trans &trans &trans>;
+            sensor-bindings = <&dax_enc_cd>;
+        };
+    };
+};
+
+&mock_encoder {
+    event-period = <200>;
+    events = <18 (-18) 18 (-18)>;
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1300) ZMK_MOCK_RELEASE(0,0,10)>;
+};

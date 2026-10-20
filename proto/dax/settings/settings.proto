@@ -28,6 +28,21 @@
 //     temp_layer_after_ms    INT32 0..60000
 //     temp_layer_back_ms     INT32 0..60000
 //
+//   dax_encoder
+//     sensor_name            a slot a sensor in zmk,keymap-sensors order, BYTES, read only: the
+//                              sensor's node name
+//     binding                a slot a sensor, layer and direction: slot = (sensor x the number of
+//                              layers + layer id) x 2 + direction (0 clockwise, 1 counterclockwise).
+//                              The layer is a layer id, not its position in keymap order: ZMK plays
+//                              a sensor by layer id. The number of layers is the slot count divided
+//                              by 2 x the sensors, which a keymap lists fewer of once one is removed.
+//                              BYTES, little-endian:
+//                              12 bytes  behavior local id (2), param1 (4), param2 (4), tap_ms (2,
+//                                        0..1000)
+//                            A slot has a default, and takes a write, only where the layer binds a
+//                            dax,behavior-encoder to the sensor; a write is refused unless the
+//                            behavior exists and presses.
+//
 //   dax_gesture
 //     stroke_size            1 slot     INT32 10..10000
 //     idle_ms                1 slot     INT32 0..10000, 0 turns the pause off
