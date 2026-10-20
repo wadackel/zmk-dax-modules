@@ -41,6 +41,7 @@ static int write_int32(const char *key, int32_t value) {
     return ret ?: dax_setting_set(setting, 0, bytes, sizeof(bytes));
 }
 
+#if IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_RELOAD)
 static int write_bool(const char *key, bool value) {
     const struct dax_setting *setting = find(key);
     uint8_t byte = value;
@@ -48,14 +49,15 @@ static int write_bool(const char *key, bool value) {
     return ret ?: dax_setting_set(setting, 0, &byte, 1);
 }
 #endif
+#endif
 
 #if IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD)
-/* tests/pointer/edit-discard reports X 2 at 1000 ms and again at 2000 ms. */
+/* tests/pointer/edit-discard reports right 2 from 1000 to 1300 ms and again from 1600 to 1900 ms. */
 static int setup(void) {
     log_result("write scale_div 40000", write_int32("scale_div", 40000));
     log_result("write rotation 361", write_int32("rotation", 361));
     log_result("write scale_mul 3", write_int32("scale_mul", 3));
-    log_result("write x_invert", write_bool("x_invert", true));
+    log_result("write rotation 90", write_int32("rotation", 90));
     return 0;
 }
 

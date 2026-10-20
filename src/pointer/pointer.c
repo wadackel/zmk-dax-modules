@@ -46,8 +46,8 @@ struct pointer_data {
     int32_t sin_1000;
 
     /* The input thread's own: rotation pairs an X report with the Y report next to it. */
-    int16_t last_x;
-    int16_t last_y;
+    int32_t last_x;
+    int32_t last_y;
     bool has_x;
     bool has_y;
 
@@ -64,10 +64,12 @@ static const struct device *const pointers[] = {DT_INST_FOREACH_STATUS_OKAY(POIN
 
 BUILD_ASSERT(ARRAY_SIZE(pointers) == DAX_POINTER_COUNT, "one slot per pointer processor");
 
-static void set_rotation(struct pointer_data *data, int32_t degrees) {
-    double radians = (double)degrees * 3.14159265358979 / 180.0;
-    data->cos_1000 = (int32_t)lround(cos(radians) * 1000.0);
-    data->sin_1000 = (int32_t)lround(sin(radians) * 1000.0);
+static int32_t cos_1000_of(int32_t degrees) {
+    return (int32_t)lround(cos((double)degrees * 3.14159265358979 / 180.0) * 1000.0);
+}
+
+static int32_t sin_1000_of(int32_t degrees) {
+    return (int32_t)lround(sin((double)degrees * 3.14159265358979 / 180.0) * 1000.0);
 }
 
 static int code_index(uint16_t code, const uint16_t *codes, size_t len) {
@@ -115,8 +117,10 @@ static void activate_work_handler(struct k_work *work) {
         return;
     }
     uint8_t position = UINT8_MAX;
+    uint16_t back_ms = 0;
     K_SPINLOCK(&data->lock) {
         position = data->values.temp_layer_on ? data->values.temp_layer : UINT8_MAX;
+        back_ms = data->values.temp_layer_back_ms;
     }
     zmk_keymap_layer_id_t id =
         position < ZMK_KEYMAP_LAYERS_LEN ? zmk_keymap_layer_index_to_id(position)
@@ -132,6 +136,8 @@ static void activate_work_handler(struct k_work *work) {
     }
     data->layer_active = true;
     data->active_layer_id = id;
+    /* The report that asked for the layer saw it still off and scheduled no way back. */
+    k_work_reschedule(&data->deactivate_work, K_MSEC(back_ms));
 }
 
 static void deactivate_work_handler(struct k_work *work) {
@@ -196,20 +202,22 @@ static int pointer_handle_event(const struct device *dev, struct input_event *ev
     }
 
     if (values.rotation != 0) {
-        int16_t value = event->value;
+        int32_t value = event->value;
         if (is_x) {
             data->last_x = value;
             data->has_x = true;
-            event->value = data->has_y
-                               ? (data->last_x * cos_1000 - data->last_y * sin_1000) / 1000
-                               : 0;
+            event->value = data->has_y ? (int32_t)(((int64_t)data->last_x * cos_1000 -
+                                                    (int64_t)data->last_y * sin_1000) /
+                                                   1000)
+                                       : 0;
             data->has_y = false;
         } else {
             data->last_y = value;
             data->has_y = true;
-            event->value = data->has_x
-                               ? (data->last_x * sin_1000 + data->last_y * cos_1000) / 1000
-                               : 0;
+            event->value = data->has_x ? (int32_t)(((int64_t)data->last_x * sin_1000 +
+                                                    (int64_t)data->last_y * cos_1000) /
+                                                   1000)
+                                       : 0;
             data->has_x = false;
         }
     }
@@ -243,11 +251,15 @@ const char *dax_pointer_name(uint16_t slot) {
 void dax_pointer_apply(uint16_t slot, const struct dax_pointer_values *values) {
     struct pointer_data *data = pointers[slot]->data;
 
+    int32_t cos_1000 = cos_1000_of(values->rotation);
+    int32_t sin_1000 = sin_1000_of(values->rotation);
+
     k_work_cancel_delayable(&data->activate_work);
     k_work_cancel_delayable(&data->deactivate_work);
     K_SPINLOCK(&data->lock) {
         data->values = *values;
-        set_rotation(data, values->rotation);
+        data->cos_1000 = cos_1000;
+        data->sin_1000 = sin_1000;
     }
     /* The held layer may no longer be the one the values name. */
     layer_off(data);
@@ -259,7 +271,8 @@ static int pointer_init(const struct device *dev) {
 
     /* settings_load() runs later, from main(), and reports can come first. */
     data->values = cfg->defaults;
-    set_rotation(data, cfg->defaults.rotation);
+    data->cos_1000 = cos_1000_of(cfg->defaults.rotation);
+    data->sin_1000 = sin_1000_of(cfg->defaults.rotation);
     k_work_init_delayable(&data->activate_work, activate_work_handler);
     k_work_init_delayable(&data->deactivate_work, deactivate_work_handler);
     return 0;
@@ -356,6 +369,8 @@ ZMK_SUBSCRIPTION(dax_pointer_keycode, zmk_keycode_state_changed);
 #define POINTER_INST(n)                                                                            \
     BUILD_ASSERT(DT_INST_PROP_LEN(n, x_codes) == DT_INST_PROP_LEN(n, y_codes),                     \
                  "x-codes and y-codes need the same length");                                      \
+    BUILD_ASSERT(sizeof(DT_INST_PROP(n, display_name)) - 1 <= DAX_POINTER_NAME_SIZE,               \
+                 "display-name must fit DAX_POINTER_NAME_SIZE");                                   \
     CHECK_RANGE(n, scale_multiplier, 1, 65535);                                                    \
     CHECK_RANGE(n, scale_divisor, 1, 32767);                                                       \
     CHECK_RANGE(n, rotation_degrees, -360, 360);                                                   \

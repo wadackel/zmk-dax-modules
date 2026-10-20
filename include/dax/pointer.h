@@ -15,6 +15,8 @@
 
 #define DAX_POINTER_SUBSYSTEM_ID "dax_pointer"
 #define DAX_POINTER_COUNT DT_NUM_INST_STATUS_OKAY(dax_input_processor_pointer)
+/* The most bytes in a display-name, which the read-only `name` setting holds. */
+#define DAX_POINTER_NAME_SIZE 24
 
 /* What a processor does to a report. Each field is one key of the owner. */
 struct dax_pointer_values {
@@ -36,7 +38,6 @@ struct dax_pointer_values {
 
 /* The devicetree's values for the slot, which are its defaults. */
 void dax_pointer_defaults(uint16_t slot, struct dax_pointer_values *values);
-/* The processor's display-name. */
 const char *dax_pointer_name(uint16_t slot);
 /* Makes the slot's processor use these values from its next report on. Not for an ISR. */
 void dax_pointer_apply(uint16_t slot, const struct dax_pointer_values *values);

@@ -6,6 +6,8 @@
 //   LSHIFT  position 1 is transparent there and resolves to a modifier, which keeps the layer
 //   B       position 2 resolves to a plain key, which ends the layer
 //   A       position 0 again, now from the default layer
+// One more report at 2000 ms holds the layer again: position 0 types D at 2500 ms, and A at
+// 4550 ms, after the layer went off 2000 ms after that single report.
 / {
     keymap {
         compatible = "zmk,keymap";
@@ -34,8 +36,8 @@
     mock_trackball: mock_trackball {
         compatible = "zmk,input-mock";
         event-startup-delay = <1000>;
-        event-period = <20>;
-        events = <INPUT_EV_REL INPUT_REL_X 1 1>;
+        event-period = <1000>;
+        events = <INPUT_EV_REL INPUT_REL_X 1 1>, <INPUT_EV_REL INPUT_REL_X 1 1>;
     };
 
     trackball_listener {
@@ -57,6 +59,10 @@
         ZMK_MOCK_PRESS(1,0,50)
         ZMK_MOCK_RELEASE(1,0,50)
         ZMK_MOCK_PRESS(0,0,50)
-        ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,1000)
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,2000)
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,10)
     >;
 };

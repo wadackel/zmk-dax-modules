@@ -18,8 +18,6 @@
 #include <zmk/event_manager.h>
 #include <zmk/keymap.h>
 
-#define NAME_SIZE 24
-
 #if IS_ENABLED(CONFIG_ZMK_STUDIO_RPC)
 #include <zmk/studio/custom.h>
 
@@ -78,7 +76,7 @@ VALUE_DEFAULT(temp_layer_back_ms_default, put_int32, temp_layer_back_ms)
 
 static int name_default(uint16_t slot, uint8_t *buf, size_t size) {
     const char *name = dax_pointer_name(slot);
-    size_t len = MIN(strlen(name), NAME_SIZE);
+    size_t len = strlen(name);
     if (len > size) {
         return -ENOSPC;
     }
@@ -113,7 +111,7 @@ static const struct dax_setting_type name_type = {
     DAX_SETTING_DEFINE_TYPED_SLOTS(name, DAX_POINTER_SUBSYSTEM_ID, key, DAX_POINTER_COUNT, size,  \
                                    &type)
 
-POINTER_SETTING(dax_pointer_name_setting, "name", NAME_SIZE, name_type);
+POINTER_SETTING(dax_pointer_name_setting, "name", DAX_POINTER_NAME_SIZE, name_type);
 POINTER_SETTING(dax_pointer_scale_mul, "scale_mul", sizeof(int32_t), scale_mul_type);
 POINTER_SETTING(dax_pointer_scale_div, "scale_div", sizeof(int32_t), scale_div_type);
 POINTER_SETTING(dax_pointer_rotation, "rotation", sizeof(int32_t), rotation_type);
