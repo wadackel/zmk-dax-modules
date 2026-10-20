@@ -1,0 +1,107 @@
+# Copyright (c) 2026 wadackel
+# SPDX-License-Identifier: MIT
+
+description: |
+  Scales, rotates, swaps, inverts or turns into scrolling the relative movement of a pointing
+  device, and can hold a layer while it moves. Every value below is a default: a settings app
+  changes it at runtime through the `dax_pointer` dax settings, one slot per processor in
+  devicetree instance order (proto/dax/settings/settings.proto lists the keys).
+
+  A report goes through these steps: the axis it moves on picks the output code (scrolling wins
+  over the swap), then rotation, then inversion by the axis the report came in on, then scaling.
+
+      pointer: pointer {
+          compatible = "dax,input-processor-pointer";
+          #input-processor-cells = <0>;
+          display-name = "Pointer";
+          x-codes = <INPUT_REL_X>;
+          y-codes = <INPUT_REL_Y>;
+          xy-swap;
+          x-invert;
+          track-remainders;
+      };
+
+compatible: "dax,input-processor-pointer"
+
+include: ip_zero_param.yaml
+
+properties:
+  display-name:
+    type: string
+    required: true
+    description: What a settings app calls the processor.
+
+  x-codes:
+    type: array
+    required: true
+    description: The relative input codes this processor takes as its X axis.
+
+  y-codes:
+    type: array
+    required: true
+    description: The relative input codes this processor takes as its Y axis, as many as x-codes.
+
+  track-remainders:
+    type: boolean
+    description: |
+      Carry what scaling leaves over to the next report. The input listener keeps the remainder
+      only for a processor that has this.
+
+  scale-multiplier:
+    type: int
+    default: 1
+    description: 1 to 65535.
+
+  scale-divisor:
+    type: int
+    default: 1
+    description: 1 to 32767, which the listener's 16-bit remainder can hold.
+
+  rotation-degrees:
+    type: int
+    default: 0
+    description: -360 to 360. X' = X cos a - Y sin a, Y' = X sin a + Y cos a.
+
+  xy-swap:
+    type: boolean
+    description: Send X movement as Y and Y as X.
+
+  x-invert:
+    type: boolean
+    description: Reverse movement that came in on the X axis.
+
+  y-invert:
+    type: boolean
+    description: Reverse movement that came in on the Y axis.
+
+  xy-to-scroll:
+    type: boolean
+    description: Send X movement as horizontal scrolling and Y as vertical scrolling.
+
+  active-layers:
+    type: int
+    default: 0
+    description: |
+      Bit n is the nth layer in keymap order; the processor passes reports through unchanged
+      while none of them is active. 0 means every layer.
+
+  temp-layer-enabled:
+    type: boolean
+    description: |
+      Hold `temp-layer` while the device moves. A key press turns it off, unless the key is bound
+      on that layer or plays a modifier with &kp.
+
+  temp-layer:
+    type: int
+    default: 0
+    description: The layer to hold, by its position in keymap order.
+
+  temp-layer-activation-delay-ms:
+    type: int
+    default: 100
+    description: Movement this soon after a key press does not switch the layer on.
+
+  temp-layer-deactivation-delay-ms:
+    type: int
+    default: 500
+    description: The layer goes off this long after the last movement.

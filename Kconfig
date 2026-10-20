@@ -60,6 +60,12 @@ config ZMK_DAX_SETTINGS
 
 if ZMK_DAX_SETTINGS
 
+# Settings load on the main thread. zmk-feature-custom-settings, which these settings replace,
+# saw a split central overflow the 1024-byte default main stack during that load and raised it
+# this way. configdefault only raises the default; a board or user setting still wins.
+configdefault MAIN_STACK_SIZE
+    default 2048
+
 config ZMK_DAX_SETTINGS_VALUE_MAX_SIZE
     int "Most bytes one setting slot holds"
     default 288 if ZMK_DAX_MACRO
@@ -80,6 +86,37 @@ config ZMK_DAX_SETTINGS_STUDIO_RPC
       a client edits the trackball and gesture settings.
 
 endif
+
+config ZMK_DAX_POINTER
+    bool "Pointer processors edited at runtime"
+    default y
+    depends on DT_HAS_DAX_INPUT_PROCESSOR_POINTER_ENABLED
+    depends on ZMK_POINTING
+    select ZMK_DAX_SETTINGS
+    help
+      dax,input-processor-pointer: scaling, rotation, swap, inversion, scrolling and a layer
+      held while the device moves, each a dax setting of the dax_pointer owner.
+
+config ZMK_DAX_POINTER_TEST
+    bool "Edit the pointer settings shortly after boot (tests only)"
+    depends on ZMK_DAX_POINTER
+
+choice ZMK_DAX_POINTER_TEST_SCENARIO
+    prompt "What the test writes"
+    depends on ZMK_DAX_POINTER_TEST
+
+config ZMK_DAX_POINTER_TEST_EDIT_DISCARD
+    bool "Writes in RAM, then a discard"
+
+config ZMK_DAX_POINTER_TEST_RELOAD
+    bool "Saves, then reads the settings from flash again"
+    select ZMK_DAX_SETTINGS_TEST
+
+config ZMK_DAX_POINTER_TEST_REORDER
+    bool "Moves the layers so that positions and ids differ"
+    depends on ZMK_KEYMAP_LAYER_REORDERING
+
+endchoice
 
 config ZMK_DAX_COMBO
     bool "Combos matched by ZMK's combo code, edited at runtime"

@@ -1,0 +1,51 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD (src/test/pointer_test.c) writes scale_mul 3 and a
+// rotation of 90 degrees right after boot and discards at 1500 ms: right 2 at 1000 ms is sent as
+// down 6, and right 2 at 2000 ms as right 2.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    edited: edited {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Edited";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+    };
+
+    mock_before: mock_before {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 0>, <INPUT_EV_REL INPUT_REL_Y 0 1>;
+    };
+
+    mock_after: mock_after {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <2000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 0>, <INPUT_EV_REL INPUT_REL_Y 0 1>;
+    };
+
+    before_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_before>;
+        input-processors = <&edited>;
+    };
+
+    after_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_after>;
+        input-processors = <&edited>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1250) ZMK_MOCK_RELEASE(0,0,10)>;
+};

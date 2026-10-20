@@ -1,0 +1,37 @@
+#include "../common.dtsi"
+
+// At 90 degrees, right 10 is sent as down 10: X' = X cos - Y sin, Y' = X sin + Y cos.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    rotated: rotated {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Rotated";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        rotation-degrees = <90>;
+    };
+
+    mock_trackball: mock_trackball {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 10 0>, <INPUT_EV_REL INPUT_REL_Y 0 1>;
+    };
+
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_trackball>;
+        input-processors = <&rotated>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1500) ZMK_MOCK_RELEASE(0,0,10)>;
+};

@@ -1,0 +1,90 @@
+#include "../common.dtsi"
+
+// 1/64 carries its remainder: four reports of 16 add up to one. 65535/32767 keeps a remainder
+// as large as the divisor allows: 1 and 1 give 2 and 2. 65535/1 saturates instead of wrapping.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    slow: slow {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Slow";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        scale-divisor = <64>;
+        track-remainders;
+    };
+
+    widest: widest {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Widest";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        scale-multiplier = <65535>;
+        scale-divisor = <32767>;
+        track-remainders;
+    };
+
+    fastest: fastest {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Fastest";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        scale-multiplier = <65535>;
+    };
+
+    mock_slow: mock_slow {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events
+            = <INPUT_EV_REL INPUT_REL_X 16 1>
+            , <INPUT_EV_REL INPUT_REL_X 16 1>
+            , <INPUT_EV_REL INPUT_REL_X 16 1>
+            , <INPUT_EV_REL INPUT_REL_X 16 1>
+            ;
+    };
+
+    mock_widest: mock_widest {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1500>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 1 1>, <INPUT_EV_REL INPUT_REL_X 1 1>;
+    };
+
+    mock_fastest: mock_fastest {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <2000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 1 1>;
+    };
+
+    slow_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_slow>;
+        input-processors = <&slow>;
+    };
+
+    widest_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_widest>;
+        input-processors = <&widest>;
+    };
+
+    fastest_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_fastest>;
+        input-processors = <&fastest>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,2500) ZMK_MOCK_RELEASE(0,0,10)>;
+};

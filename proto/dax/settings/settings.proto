@@ -11,6 +11,23 @@
 //   dax_trackball
 //     cpi                    1 slot     INT32 608..4826, default the sensor's res-cpi
 //
+//   dax_pointer              a slot a dax,input-processor-pointer, in devicetree instance order
+//     name                   BYTES, read only: the processor's display-name
+//     scale_mul              INT32 1..65535
+//     scale_div              INT32 1..32767, which the input listener's 16-bit remainder can hold
+//     rotation               INT32 -360..360, degrees
+//     xy_swap                BOOL
+//     x_invert               BOOL, by the axis a report came in on, before the swap
+//     y_invert               BOOL, the same
+//     xy_to_scroll           BOOL, wins over xy_swap
+//     layers                 INT32 0..INT32_MAX, bit n is the nth layer in keymap order; 0 is every
+//                                       layer
+//     temp_layer_on          BOOL
+//     temp_layer             INT32 0..the number of layers - 1: a layer position in keymap order,
+//                                       not a layer id
+//     temp_layer_after_ms    INT32 0..60000
+//     temp_layer_back_ms     INT32 0..60000
+//
 //   dax_gesture
 //     stroke_size            1 slot     INT32 10..10000
 //     idle_ms                1 slot     INT32 0..10000, 0 turns the pause off

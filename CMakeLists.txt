@@ -35,6 +35,11 @@ if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_C
   target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_TEST app PRIVATE src/test/gesture_test.c)
 endif()
 
+if(CONFIG_ZMK_DAX_POINTER)
+  target_sources(app PRIVATE src/pointer/pointer.c src/pointer/pointer_settings.c)
+  target_sources_ifdef(CONFIG_ZMK_DAX_POINTER_TEST app PRIVATE src/test/pointer_test.c)
+endif()
+
 if(CONFIG_ZMK_DAX_MACRO)
   target_sources(app PRIVATE
     src/macro/macro_body.c
