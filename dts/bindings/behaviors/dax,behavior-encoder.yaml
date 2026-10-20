@@ -1,0 +1,41 @@
+# Copyright (c) 2026 wadackel
+# SPDX-License-Identifier: MIT
+
+description: |
+  Plays a binding for each step an encoder turns, one for clockwise and one for counterclockwise,
+  each held for tap-ms. Put an instance in a layer's sensor-bindings. These are the defaults: a
+  settings app changes the binding of each sensor, layer and direction at runtime through the
+  `dax_encoder` dax settings (proto/dax/settings/settings.proto lists the keys).
+
+      dax_enc_scroll: dax_enc_scroll {
+          compatible = "dax,behavior-encoder";
+          #sensor-binding-cells = <0>;
+          cw-binding = <&msc SCRL_UP>;
+          ccw-binding = <&msc SCRL_DOWN>;
+          tap-ms = <20>;
+      };
+
+  Name the node with a `dax_enc_` prefix: settings apps tell these behaviors apart from the ones a
+  key can play by it.
+
+compatible: "dax,behavior-encoder"
+
+properties:
+  "#sensor-binding-cells":
+    type: int
+    required: true
+    const: 0
+  cw-binding:
+    type: phandle-array
+    required: true
+    specifier-space: binding
+    description: The binding a clockwise step plays, such as <&kp C_VOL_UP>.
+  ccw-binding:
+    type: phandle-array
+    required: true
+    specifier-space: binding
+    description: The binding a counterclockwise step plays.
+  tap-ms:
+    type: int
+    default: 5
+    description: How long each step holds its binding, 0 to 1000.

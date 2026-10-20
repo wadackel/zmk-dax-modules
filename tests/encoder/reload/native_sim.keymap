@@ -1,0 +1,23 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_ENCODER_TEST_RELOAD (src/test/encoder_test.c) saves &kp E for clockwise, writes
+// &kp F for counterclockwise without saving, and reads the settings from flash again: the turns
+// at 1000 and 1200 ms play E and B.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+            sensor-bindings = <&dax_enc_ab>;
+        };
+    };
+};
+
+&mock_encoder {
+    event-period = <200>;
+    events = <18 (-18)>;
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,800) ZMK_MOCK_RELEASE(0,0,10)>;
+};

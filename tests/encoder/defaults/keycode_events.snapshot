@@ -1,0 +1,17 @@
+encoder test: layer 0 cw: key_press 0x70004 tap 20
+encoder test: layer 0 ccw: key_press 0x70005 tap 20
+encoder test: layer 1 cw: none (-2)
+encoder test: layer 2 cw: key_press 0x70006 tap 30
+encoder test: layer 2 ccw: key_press 0x70007 tap 30
+encoder test: write to layer 1: -22
+encoder test: write an encoder behavior: -22
+encoder test: write a 1001 ms tap: -22
+PASS: dax_encoder_test_setup
+pressed: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x07 implicit_mods 0x00 explicit_mods 0x00

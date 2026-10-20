@@ -1,0 +1,23 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_ENCODER_TEST_EDIT_DISCARD (src/test/encoder_test.c) writes &kp E for clockwise
+// on layer 0 right after boot and discards at 1500 ms: the turn at 1000 ms plays E, the one at
+// 2000 ms A again.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+            sensor-bindings = <&dax_enc_ab>;
+        };
+    };
+};
+
+&mock_encoder {
+    event-period = <1000>;
+    events = <18 18>;
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1250) ZMK_MOCK_RELEASE(0,0,10)>;
+};

@@ -1,0 +1,7 @@
+encoder test: write E: 0
+PASS: dax_encoder_test_setup
+pressed: usage_page 0x07 keycode 0x08 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x08 implicit_mods 0x00 explicit_mods 0x00
+encoder test: discarded 1 slot(s): 0
+pressed: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00

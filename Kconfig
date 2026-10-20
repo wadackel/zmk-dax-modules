@@ -118,6 +118,37 @@ config ZMK_DAX_POINTER_TEST_REORDER
 
 endchoice
 
+config ZMK_DAX_ENCODER
+    bool "Encoder bindings edited at runtime"
+    default y
+    depends on DT_HAS_DAX_BEHAVIOR_ENCODER_ENABLED
+    depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+    select ZMK_DAX_SETTINGS
+    select ZMK_BEHAVIOR_LOCAL_IDS
+    help
+      dax,behavior-encoder: the binding each step of an encoder plays, per sensor, layer and
+      direction, as dax settings of the dax_encoder owner.
+
+config ZMK_DAX_ENCODER_TEST
+    bool "Edit the encoder settings shortly after boot (tests only)"
+    depends on ZMK_DAX_ENCODER
+
+choice ZMK_DAX_ENCODER_TEST_SCENARIO
+    prompt "What the test writes"
+    depends on ZMK_DAX_ENCODER_TEST
+
+config ZMK_DAX_ENCODER_TEST_DEFAULTS
+    bool "Nothing kept; logs the defaults and what a write refuses"
+
+config ZMK_DAX_ENCODER_TEST_EDIT_DISCARD
+    bool "A write in RAM, then a discard"
+
+config ZMK_DAX_ENCODER_TEST_RELOAD
+    bool "Saves, then reads the settings from flash again"
+    select ZMK_DAX_SETTINGS_TEST
+
+endchoice
+
 config ZMK_DAX_COMBO
     bool "Combos matched by ZMK's combo code, edited at runtime"
     default n
