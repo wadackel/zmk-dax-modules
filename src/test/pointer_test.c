@@ -52,7 +52,7 @@ static int write_bool(const char *key, bool value) {
 #endif
 
 #if IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD)
-/* tests/pointer/edit-discard reports right 2 from 1000 to 1300 ms and again from 1600 to 1900 ms. */
+/* tests/pointer/edit-discard reports right 2 at 1000 ms and again at 2000 ms. */
 static int setup(void) {
     log_result("write scale_div 40000", write_int32("scale_div", 40000));
     log_result("write rotation 361", write_int32("rotation", 361));
@@ -71,7 +71,7 @@ static void discard_handler(struct k_work *work) {
 static K_WORK_DELAYABLE_DEFINE(discard_work, discard_handler);
 
 /* At a time since boot, between the two reports: settings load a while after boot. */
-static void after_setup(void) { k_work_schedule(&discard_work, K_TIMEOUT_ABS_MS(1450)); }
+static void after_setup(void) { k_work_schedule(&discard_work, K_TIMEOUT_ABS_MS(1500)); }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_RELOAD)
 /* tests/pointer/reload reports X 1 at 1000 ms. The flash file of native_sim outlives a run, so
  * every slot is emptied in flash first. */

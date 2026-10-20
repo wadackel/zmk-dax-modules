@@ -1,8 +1,8 @@
 #include "../common.dtsi"
 
 // CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD (src/test/pointer_test.c) writes scale_mul 3 and a
-// rotation of 90 degrees right after boot and discards at 1450 ms: right 2 (1000-1300 ms) is
-// sent as down 6, and right 2 again (1600-1900 ms) as right 2.
+// rotation of 90 degrees right after boot and discards at 1500 ms: right 2 at 1000 ms is sent as
+// down 6, and right 2 at 2000 ms as right 2.
 / {
     keymap {
         compatible = "zmk,keymap";
@@ -19,21 +19,29 @@
         y-codes = <INPUT_REL_Y>;
     };
 
-    mock_trackball: mock_trackball {
+    mock_before: mock_before {
         compatible = "zmk,input-mock";
         event-startup-delay = <1000>;
-        event-period = <300>;
-        events
-            = <INPUT_EV_REL INPUT_REL_X 2 0>
-            , <INPUT_EV_REL INPUT_REL_Y 0 1>
-            , <INPUT_EV_REL INPUT_REL_X 2 0>
-            , <INPUT_EV_REL INPUT_REL_Y 0 1>
-            ;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 0>, <INPUT_EV_REL INPUT_REL_Y 0 1>;
     };
 
-    trackball_listener {
+    mock_after: mock_after {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <2000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 0>, <INPUT_EV_REL INPUT_REL_Y 0 1>;
+    };
+
+    before_listener {
         compatible = "zmk,input-listener";
-        device = <&mock_trackball>;
+        device = <&mock_before>;
+        input-processors = <&edited>;
+    };
+
+    after_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_after>;
         input-processors = <&edited>;
     };
 };
