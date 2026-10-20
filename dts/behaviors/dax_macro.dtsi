@@ -1,0 +1,9 @@
+/ {
+    behaviors {
+        dax_macro: dax_macro {
+            compatible = "dax,behavior-runtime-macro";
+            #binding-cells = <1>;
+            display-name = "Runtime Macro";
+        };
+    };
+};

@@ -1,0 +1,11 @@
+macro test: at boot: slot 0 esc_lang2, 10 bytes, steps KT, default, unsaved 0
+macro test: at boot: slot 2 shift a, 18 bytes, steps DKWU, default, unsaved 0
+PASS: dax_macro_test_setup
+pressed: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0xE1 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x04 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0xE1 implicit_mods 0x00 explicit_mods 0x00

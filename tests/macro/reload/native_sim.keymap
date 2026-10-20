@@ -1,0 +1,5 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_MACRO_TEST_RELOAD (src/test/macro_test.c) creates `saved` in slot 1 (B, then
+// D) and `gone` in slot 3, renames the default in slot 0, saves, deletes `gone`, saves again and
+// reads the macros from flash. The keys then play ESC and LANG2, B and D, C, nothing.

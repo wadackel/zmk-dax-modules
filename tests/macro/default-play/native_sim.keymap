@@ -1,0 +1,44 @@
+#include <behaviors.dtsi>
+#include <behaviors/dax_macro.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+// Nothing is written: the slots show their devicetree defaults, unsaved, and play them.
+// esc_lang2 is the macro of the dax keyboards. `shifted` holds shift across a packed tap and a
+// wait. Slot 1 has no default and plays nothing.
+/ {
+    dax_macros {
+        compatible = "dax,runtime-macro-defaults";
+
+        esc_lang2 {
+            slot = <0>;
+            bindings = <&macro_tap>, <&kp ESCAPE &kp LANG2>;
+            wait-ms = <15>;
+        };
+
+        shifted {
+            slot = <2>;
+            macro-name = "shift a";
+            bindings = <&macro_press &kp LSHIFT>, <&macro_tap &kp A>, <&macro_wait_time 20>,
+                       <&macro_release &kp LSHIFT>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&dax_macro 0 &dax_macro 1 &dax_macro 2 &none>;
+        };
+    };
+};
+
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(1,0,10)
+        ZMK_MOCK_RELEASE(1,0,300)
+    >;
+};

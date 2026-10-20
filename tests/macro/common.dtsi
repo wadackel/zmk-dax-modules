@@ -1,0 +1,43 @@
+#include <behaviors.dtsi>
+#include <behaviors/dax_macro.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+// The defaults of tests/macro/edit-discard and tests/macro/reload. Each key plays its slot.
+/ {
+    dax_macros {
+        compatible = "dax,runtime-macro-defaults";
+
+        esc_lang2 {
+            slot = <0>;
+            bindings = <&macro_tap>, <&kp ESCAPE &kp LANG2>;
+            wait-ms = <15>;
+        };
+
+        other {
+            slot = <2>;
+            bindings = <&macro_tap &kp C>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&dax_macro 0 &dax_macro 1 &dax_macro 2 &dax_macro 3>;
+        };
+    };
+};
+
+// The first delay is also waited before the first event, which leaves room for the test's edits.
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,500)
+        ZMK_MOCK_RELEASE(0,0,300)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,1,300)
+        ZMK_MOCK_PRESS(1,0,10)
+        ZMK_MOCK_RELEASE(1,0,300)
+        ZMK_MOCK_PRESS(1,1,10)
+        ZMK_MOCK_RELEASE(1,1,300)
+    >;
+};

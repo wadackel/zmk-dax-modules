@@ -1,0 +1,17 @@
+# Copyright (c) 2026 cormoran
+#
+# SPDX-License-Identifier: MIT
+#
+# Nanopb options file for macro.proto, adapted from cormoran/zmk-feature-runtime-macro
+# (proto/cormoran/runtime_macro/runtime_macro.options at 3853096). Names hold
+# CONFIG_ZMK_DAX_MACRO_NAME_MAX bytes and a NUL; macro_rpc.c checks the sizes.
+
+dax.macro.MacroSummary.name                  max_size:32
+dax.macro.MacroDetail.name                   max_size:32
+dax.macro.CreateMacroRequest.name            max_size:32
+dax.macro.RenameMacroRequest.name            max_size:32
+# Streamed at encode time, so a whole macro is never held as an array of steps in the response buffer.
+dax.macro.MacroDetail.steps                  type:FT_CALLBACK
+dax.macro.KeyTapSequenceStep.packed_keys     max_size:64
+dax.macro.ErrorResponse.message              max_size:64
+dax.macro.ListMacrosResponse.macros          max_count:16

@@ -1,8 +1,0 @@
-at boot: esc_lang2 slot 0, 10 bytes, unsaved 1
-edit: 0
-discard: 0
-after discard: esc_lang2 slot 0, 10 bytes, unsaved 0
-pressed: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
-released: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
-pressed: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
-released: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
