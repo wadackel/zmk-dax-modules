@@ -70,7 +70,8 @@ static void discard_handler(struct k_work *work) {
 
 static K_WORK_DELAYABLE_DEFINE(discard_work, discard_handler);
 
-static void after_setup(void) { k_work_schedule(&discard_work, K_MSEC(1500)); }
+/* At a time since boot, between the two reports: settings load a while after boot. */
+static void after_setup(void) { k_work_schedule(&discard_work, K_TIMEOUT_ABS_MS(1450)); }
 #elif IS_ENABLED(CONFIG_ZMK_DAX_POINTER_TEST_RELOAD)
 /* tests/pointer/reload reports X 1 at 1000 ms. The flash file of native_sim outlives a run, so
  * every slot is emptied in flash first. */
