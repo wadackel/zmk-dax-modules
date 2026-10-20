@@ -53,11 +53,11 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
     (RECORD_HEADER_SIZE + CONFIG_ZMK_DAX_COMBO_MAX_KEYS_PER_COMBO * sizeof(uint16_t) +            \
      DAX_COMBO_NAME_MAX)
 
-DAX_SETTING_DEFINE(dax_combo_slots, DAX_COMBO_SUBSYSTEM_ID, "combo",
-                   CONFIG_ZMK_DAX_COMBO_MAX_COMBOS, RECORD_MAX_SIZE);
-DAX_SETTING_DEFINE(dax_combo_timeout, DAX_COMBO_SUBSYSTEM_ID, "timeout_ms", 1, sizeof(uint16_t));
-DAX_SETTING_DEFINE(dax_combo_slow_release, DAX_COMBO_SUBSYSTEM_ID, "slow_release", 1, 1);
-DAX_SETTING_DEFINE(dax_combo_prior_idle, DAX_COMBO_SUBSYSTEM_ID, "require_prior_idle_ms", 1,
+DAX_SETTING_DEFINE_SLOTS(dax_combo_slots, DAX_COMBO_SUBSYSTEM_ID, "combo",
+                         CONFIG_ZMK_DAX_COMBO_MAX_COMBOS, RECORD_MAX_SIZE);
+DAX_SETTING_DEFINE(dax_combo_timeout, DAX_COMBO_SUBSYSTEM_ID, "timeout_ms", sizeof(uint16_t));
+DAX_SETTING_DEFINE(dax_combo_slow_release, DAX_COMBO_SUBSYSTEM_ID, "slow_release", 1);
+DAX_SETTING_DEFINE(dax_combo_prior_idle, DAX_COMBO_SUBSYSTEM_ID, "require_prior_idle_ms",
                    sizeof(uint16_t));
 
 /* Compile-time defaults from an optional `dax,runtime-combo-defaults` node. */

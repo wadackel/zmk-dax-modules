@@ -21,6 +21,11 @@ if(CONFIG_ZMK_DAX_SYSTEM_RPC)
   list(APPEND dax_protos ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/system/system.proto)
 endif()
 
+if(CONFIG_ZMK_DAX_SETTINGS_STUDIO_RPC)
+  target_sources(app PRIVATE src/settings/settings_rpc.c)
+  list(APPEND dax_protos ${CMAKE_CURRENT_SOURCE_DIR}/proto/dax/settings/settings.proto)
+endif()
+
 if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL))
   target_sources(app PRIVATE
     src/gesture/gesture_core.c
@@ -29,6 +34,7 @@ if(CONFIG_ZMK_DAX_GESTURE AND ((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_C
   )
   target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_RUNTIME app PRIVATE src/gesture/gesture_settings.c)
   target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_RPC app PRIVATE src/gesture/gesture_rpc.c)
+  target_sources_ifdef(CONFIG_ZMK_DAX_GESTURE_TEST app PRIVATE src/test/gesture_test.c)
 endif()
 
 if(CONFIG_ZMK_DAX_COMBO)

@@ -1,0 +1,139 @@
+// Copyright (c) 2026 wadackel
+//
+// SPDX-License-Identifier: MIT
+//
+// The dax_settings custom Studio subsystem: lists, checks and writes the typed settings of the dax
+// features by owner (the feature's subsystem identifier) and key. Writes and resets stay in RAM
+// until the owner is saved; a discard puts back what was last saved.
+//
+// The settings each owner has:
+//
+//   dax_trackball
+//     cpi                    1 slot     INT32 608..4826, default the sensor's res-cpi
+//
+//   dax_gesture
+//     stroke_size            1 slot     INT32 10..10000
+//     idle_ms                1 slot     INT32 0..10000, 0 turns the pause off
+//     cooldown_ms            1 slot     INT32 0..10000
+//     partial_ms             1 slot     INT32 0..10000, 0 turns it off
+//     eager                  1 slot     BOOL
+//     profile_name           a slot a profile, BYTES, read only: the profile's node name
+//     profile_layers         a slot a profile, INT32 0..INT32_MAX, bit n is the nth layer in keymap
+//                                       order (so the 32nd layer cannot be named)
+//     profile_require        a slot a profile, INT32 0..INT32_MAX, the same bits
+//     profile_suppress       a slot a profile, BOOL
+//     gesture                CONFIG_ZMK_DAX_GESTURE_MAX_GESTURES slots, BYTES, little-endian:
+//                              15 bytes  profile, pattern (4, four bits a stroke, first lowest:
+//                                        1 up, 2 down, 3 left, 4 right), behavior local id (2),
+//                                        param1 (4), param2 (4)
+//                              1 byte    0xFE: no gesture, the devicetree's included
+//                              empty     a free slot (no value and no default)
+//                            A write is refused unless the profile exists, the pattern has 1 to 8
+//                            strokes with none repeated in a row, and the binding passes the check
+//                            a keymap binding does.
+//
+// Every default above comes from the devicetree.
+syntax = "proto3";
+
+package dax.settings;
+
+enum Kind {
+    // Four bytes, little-endian, from min to max.
+    KIND_INT32 = 0;
+    // One byte, 0 or 1.
+    KIND_BOOL = 1;
+    // Bytes the owner reads; see the table above.
+    KIND_BYTES = 2;
+}
+
+message Setting {
+    string key = 1;
+    uint32 slot = 2;
+    Kind kind = 3;
+    // The stored value, or the default when nothing was written or what was stored is unreadable.
+    // Empty when there is neither.
+    bytes value = 4;
+    bool has_default = 5;
+    bytes default_value = 6;
+    // INT32 only.
+    int32 min = 7;
+    int32 max = 8;
+    // A value was written, saved or not.
+    bool written = 9;
+    // The slot differs from what was last saved.
+    bool unsaved = 10;
+    bool read_only = 11;
+    // What was stored is not a value of this kind, so the default stands in for it.
+    bool unreadable = 12;
+}
+
+// A page of the owner's settings, from `offset` in the order the keyboard keeps them.
+message ListRequest {
+    string owner = 1;
+    uint32 offset = 2;
+}
+
+message WriteRequest {
+    string owner = 1;
+    string key = 2;
+    uint32 slot = 3;
+    bytes value = 4;
+}
+
+// Forgets what was written, so the default shows again.
+message ResetRequest {
+    string owner = 1;
+    string key = 2;
+    uint32 slot = 3;
+}
+
+message SaveRequest {
+    string owner = 1;
+}
+
+message DiscardRequest {
+    string owner = 1;
+}
+
+message Request {
+    oneof request_type {
+        ListRequest list = 1;
+        WriteRequest write = 2;
+        ResetRequest reset = 3;
+        SaveRequest save = 4;
+        DiscardRequest discard = 5;
+    }
+}
+
+message ListResponse {
+    repeated Setting settings = 1;
+    // How many the owner has in all.
+    uint32 total = 2;
+}
+
+message StatusResponse {
+    // For a save, the slots it wrote; for a discard, the ones it put back; otherwise 1.
+    uint32 affected_count = 1;
+}
+
+enum ErrorCode {
+    ERROR_CODE_FAILED = 0;
+    // No such owner, key or slot. An owner none of whose settings is typed counts as missing.
+    ERROR_CODE_NOT_FOUND = 1;
+    // Not a value of the setting's kind, out of its range, or one the owner cannot use.
+    ERROR_CODE_INVALID = 2;
+    ERROR_CODE_READ_ONLY = 3;
+}
+
+message ErrorResponse {
+    ErrorCode code = 1;
+    string message = 2;
+}
+
+message Response {
+    oneof response_type {
+        ErrorResponse error = 1;
+        ListResponse list = 2;
+        StatusResponse status = 3;
+    }
+}

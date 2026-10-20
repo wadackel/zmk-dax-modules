@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MIT
  *
  * What the gesture processor recognizes with: tuning, profiles, and gesture slots. It starts as
- * the devicetree's values and, with CONFIG_ZMK_DAX_GESTURE_RUNTIME, follows custom settings.
+ * the devicetree's values and, with CONFIG_ZMK_DAX_GESTURE_RUNTIME, follows the dax settings.
  */
 
 #pragma once
@@ -56,7 +56,7 @@ void dax_gesture_model_rebuild_views(struct dax_gesture_model *model);
 
 #if IS_ENABLED(CONFIG_ZMK_DAX_GESTURE_RUNTIME)
 /*
- * Keeps `model` in step with custom settings, starting from what it holds now (the devicetree
+ * Keeps `model` in step with the dax settings, starting from what it holds now (the devicetree
  * values). `lock` guards the model; `changed` runs, with the lock held, after every update.
  */
 void dax_gesture_settings_attach(struct dax_gesture_model *model, struct k_mutex *lock,

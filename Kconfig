@@ -40,9 +40,10 @@ config ZMK_DAX_SYSTEM_RPC
       keyboard into its UF2 bootloader, so it is off unless a keyboard asks for it.
 
 config ZMK_TRACKBALL_SETTINGS
-    bool "Runtime trackball sensor settings (CPI) through custom settings"
+    bool "Runtime trackball sensor settings (CPI) in the dax settings layer"
     default n
-    depends on ZMK_CUSTOM_SETTINGS && PAW3222
+    depends on PAW3222
+    select ZMK_DAX_SETTINGS
 
 config ZMK_DAX_MACRO_DEFAULTS
     bool "Discard puts a never-saved default runtime macro back to its devicetree body"
@@ -80,6 +81,14 @@ config ZMK_DAX_SETTINGS_VALUE_MAX_SIZE
 
 config ZMK_DAX_SETTINGS_TEST
     bool "Let a test read an owner's settings from flash again (tests only)"
+
+config ZMK_DAX_SETTINGS_STUDIO_RPC
+    bool "List and edit the typed dax settings over custom Studio RPC"
+    default y
+    depends on ZMK_STUDIO
+    help
+      The dax_settings subsystem (proto/dax/settings/settings.proto), through which
+      a client edits the trackball and gesture settings.
 
 endif
 
@@ -171,9 +180,14 @@ config ZMK_DAX_GESTURE_MAX_GESTURES
       Room for the devicetree gestures plus the ones added at runtime.
 
 config ZMK_DAX_GESTURE_RUNTIME
-    bool "Edit gesture tuning, profiles and gestures through custom settings"
+    bool "Edit gesture tuning, profiles and gestures in the dax settings layer"
     default y
-    depends on ZMK_CUSTOM_SETTINGS && ZMK_BEHAVIOR_LOCAL_IDS
+    depends on ZMK_BEHAVIOR_LOCAL_IDS
+    select ZMK_DAX_SETTINGS
+
+config ZMK_DAX_GESTURE_TEST
+    bool "Edit gestures shortly after boot (tests only)"
+    depends on ZMK_DAX_GESTURE_RUNTIME
 
 config ZMK_DAX_GESTURE_RPC
     bool "Report recognition and capture patterns over custom Studio RPC"

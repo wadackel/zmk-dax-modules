@@ -1,16 +1,18 @@
+#include <string.h>
+
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/byteorder.h>
 
-#include <cormoran/zmk/custom_settings.h>
+#include <dax/settings.h>
 #include <zmk/event_manager.h>
 
 LOG_MODULE_REGISTER(trackball_settings, CONFIG_ZMK_LOG_LEVEL);
 
 #define TRACKBALL_NODE DT_NODELABEL(trackball)
 #define SUBSYSTEM_ID "dax_trackball"
-#define CPI_KEY "cpi"
 
 // The driver exports this symbol but keeps its header private to its own library.
 int paw32xx_set_resolution(const struct device *dev, uint16_t res_cpi);
@@ -27,8 +29,8 @@ static struct zmk_rpc_custom_subsystem_meta trackball_settings_meta = {
     .security = ZMK_STUDIO_RPC_HANDLER_SECURED,
 };
 
-// Registered only so the settings below get a subsystem index a client can address;
-// every request goes through the custom-settings subsystem instead.
+// Registered only so a client can tell that the keyboard has these settings; they are read and
+// written through the dax_settings subsystem.
 static bool trackball_settings_handle_request(const zmk_custom_CallRequest *req,
                                               pb_callback_t *res) {
     ARG_UNUSED(req);
@@ -40,42 +42,43 @@ ZMK_RPC_CUSTOM_SUBSYSTEM(dax_trackball, &trackball_settings_meta,
                          trackball_settings_handle_request);
 #endif
 
-ZMK_CUSTOM_SETTING_DEFINE(trackball_cpi_setting, SUBSYSTEM_ID, CPI_KEY,
-                          ZMK_CUSTOM_SETTING_VALUE_TYPE_INT32,
-                          ZMK_CUSTOM_SETTING_VALUE_INT32(DT_PROP(TRACKBALL_NODE, res_cpi)),
-                          ZMK_CUSTOM_SETTING_CONFIDENTIALITY_RPC_PUBLIC,
-                          ZMK_CUSTOM_SETTING_PERMISSION_UNSECURE,
-                          ZMK_CUSTOM_SETTING_PERMISSION_SECURE,
-                          ZMK_CUSTOM_SETTING_RANGE_INT32(CPI_MIN, CPI_MAX));
+static int cpi_default(uint16_t slot, uint8_t *buf, size_t size) {
+    ARG_UNUSED(slot);
+    if (size < sizeof(int32_t)) {
+        return -ENOSPC;
+    }
+    sys_put_le32(DT_PROP(TRACKBALL_NODE, res_cpi), buf);
+    return sizeof(int32_t);
+}
+
+static const struct dax_setting_type cpi_type = {
+    .kind = DAX_SETTING_INT32,
+    .min = CPI_MIN,
+    .max = CPI_MAX,
+    .default_value = cpi_default,
+};
+
+DAX_SETTING_DEFINE_TYPED(trackball_cpi_setting, SUBSYSTEM_ID, "cpi", sizeof(int32_t), &cpi_type);
 
 static void apply_cpi(void) {
     const struct device *trackball = DEVICE_DT_GET(TRACKBALL_NODE);
-    struct zmk_custom_setting_value value;
 
     if (!device_is_ready(trackball)) {
         return;
     }
 
-    int ret = zmk_custom_setting_read_by_key(SUBSYSTEM_ID, CPI_KEY, &value);
+    int32_t cpi =
+        dax_setting_read_int32(&trackball_cpi_setting, 0, DT_PROP(TRACKBALL_NODE, res_cpi));
+    int ret = paw32xx_set_resolution(trackball, (uint16_t)cpi);
     if (ret < 0) {
-        LOG_WRN("Failed to read the CPI setting: %d", ret);
-        return;
-    }
-
-    ret = paw32xx_set_resolution(trackball, (uint16_t)value.int32_value);
-    if (ret < 0) {
-        LOG_WRN("Failed to set CPI to %d: %d", value.int32_value, ret);
+        LOG_WRN("Failed to set CPI to %d: %d", cpi, ret);
     }
 }
 
 static int trackball_settings_listener(const zmk_event_t *eh) {
-    const struct zmk_custom_setting_changed *changed = as_zmk_custom_setting_changed(eh);
+    const struct dax_setting_changed *changed = as_dax_setting_changed(eh);
 
-    if (changed == NULL) {
-        // Settings finished loading: the saved value, if any, replaces the devicetree one.
-        apply_cpi();
-    } else if (changed->kind != ZMK_CUSTOM_SETTING_CHANGED_SAVED &&
-               zmk_custom_setting_matches(changed->setting, SUBSYSTEM_ID, CPI_KEY, NULL)) {
+    if (changed == NULL || strcmp(changed->owner, SUBSYSTEM_ID) == 0) {
         apply_cpi();
     }
 
@@ -83,5 +86,5 @@ static int trackball_settings_listener(const zmk_event_t *eh) {
 }
 
 ZMK_LISTENER(trackball_settings, trackball_settings_listener);
-ZMK_SUBSCRIPTION(trackball_settings, zmk_custom_setting_changed);
-ZMK_SUBSCRIPTION(trackball_settings, zmk_custom_settings_initialized);
+ZMK_SUBSCRIPTION(trackball_settings, dax_setting_changed);
+ZMK_SUBSCRIPTION(trackball_settings, dax_settings_loaded);
