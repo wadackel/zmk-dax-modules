@@ -132,9 +132,9 @@ static const struct dax_setting_type binding_type = {
     .kind = DAX_SETTING_BYTES, .default_value = binding_default, .validate = binding_validate};
 
 DAX_SETTING_DEFINE_TYPED_SLOTS(dax_encoder_sensor_name, DAX_ENCODER_SUBSYSTEM_ID, "sensor_name",
-                               ZMK_KEYMAP_SENSORS_LEN, DAX_ENCODER_NAME_SIZE, sensor_name_type);
+                               ZMK_KEYMAP_SENSORS_LEN, DAX_ENCODER_NAME_SIZE, &sensor_name_type);
 DAX_SETTING_DEFINE_TYPED_SLOTS(dax_encoder_binding, DAX_ENCODER_SUBSYSTEM_ID, "binding",
-                               DAX_ENCODER_SLOT_COUNT, DAX_ENCODER_RECORD_SIZE, binding_type);
+                               DAX_ENCODER_SLOT_COUNT, DAX_ENCODER_RECORD_SIZE, &binding_type);
 
 #if IS_ENABLED(CONFIG_ZMK_STUDIO_RPC)
 #include <zmk/studio/custom.h>
