@@ -14,6 +14,7 @@ Built against the ZMK main line (Zephyr 4.1), `cormoran/zmk`
 | Gesture events | `CONFIG_ZMK_DAX_GESTURE_RPC` (on by default with Studio RPC) | `cormoran/zmk` custom Studio RPC | Reports recognized strokes and fired gestures to a client that asks, and captures a drawn pattern for it. Wire format is at the top of `src/gesture/gesture_rpc.c`. |
 | Trackball settings | `CONFIG_ZMK_TRACKBALL_SETTINGS` | `zmk-driver-paw3222`, a `trackball` devicetree label with `res-cpi` | Keeps the sensor's CPI as a typed dax setting (`dax_trackball` / `cpi`, default `res-cpi`) and applies it at boot and on change. |
 | Pointer processors | `CONFIG_ZMK_DAX_POINTER` (on when the devicetree has a `dax,input-processor-pointer` node) | `CONFIG_ZMK_POINTING` | An input processor that scales, rotates, swaps, inverts or turns into scrolling relative movement, and can hold a layer while it moves; see `dts/bindings/input_processors/dax,input-processor-pointer.yaml`. Its values are typed dax settings of the `dax_pointer` owner, one slot per processor in devicetree order, with the devicetree as defaults; an edit or a reset stays in RAM until a save. A layer to hold is a position in keymap order, as every layer mask is. Adapted from `cormoran/zmk-module-runtime-input-processor`, without its inertia and axis snap. |
+| Encoder bindings | `CONFIG_ZMK_DAX_ENCODER` (on when the devicetree has a `dax,behavior-encoder` node; central only) | ZMK behavior local ids, a `zmk,keymap-sensors` node | A sensor behavior for a layer's `sensor-bindings` that plays its `cw-binding` / `ccw-binding` for each step, held `tap-ms`; see `dts/bindings/behaviors/dax,behavior-encoder.yaml`. The binding of each sensor, layer and direction is a typed dax setting of the `dax_encoder` owner, with the devicetree as default; an edit or a reset stays in RAM until a save. A slot is counted by layer id, as ZMK plays sensors. Name the nodes `dax_enc_*`. |
 | Reboot | `CONFIG_ZMK_DAX_SYSTEM_RPC` (off by default) | `cormoran/zmk` custom Studio RPC | The `dax_system` subsystem restarts the keyboard, normally or into its UF2 bootloader, when a client asks, so a new firmware can be copied on without a key press. Anyone the Studio RPC answers, over USB or a paired BLE host, can do this, so a keyboard turns it on in its own configuration. Wire format: `proto/dax/system/system.proto`. |
 | Hold macro | `CONFIG_ZMK_DAX_HOLD_MACRO` (on when the devicetree has a `dax,behavior-hold-macro` node and `CONFIG_ZMK_DAX_MACRO` is on) | `CONFIG_ZMK_DAX_MACRO` | `&dax_hold_macro <press slot> <release slot>` plays one dax macro on press and another on release, so a macro can hold a modifier or a layer while the key is down. Include `<behaviors/hold_macro.dtsi>`. Both plays go to the macro play queue, so they come out in order. |
 | Settings | `CONFIG_ZMK_DAX_SETTINGS` (selected by the features that use it), `CONFIG_ZMK_DAX_SETTINGS_VALUE_MAX_SIZE` | Zephyr settings | Values a feature edits at runtime (`include/dax/settings.h`): bytes per slot in RAM, written to the Zephyr setting `dax/<owner>/<key>[/<slot>]` by a save, only where they differ from what was last saved, and put back by a discard. A value is not decoded while settings load; a feature decodes it when it reads it. A typed setting also declares its kind (INT32 with a range, BOOL or BYTES), its default and whether it is read only, and `CONFIG_ZMK_DAX_SETTINGS_STUDIO_RPC` (on by default with Studio) lists, checks and writes those over the `dax_settings` subsystem by owner and key (`proto/dax/settings/settings.proto`). |
@@ -29,8 +30,8 @@ tests/gesture_core/run.sh
 ```
 
 The directories under `tests/gesture/`, `tests/hold-macro/`, `tests/macro/`, `tests/pointer/`,
-`tests/combo/` and `tests/combo-zmk/` are ZMK `native_sim` tests: a keymap, mocked key and pointer input, and the HID
-reports expected from them. They run from a west workspace that has this module checked out, the
+`tests/encoder/`, `tests/combo/` and `tests/combo-zmk/` are ZMK `native_sim` tests: a keymap,
+mocked key, pointer and encoder input, and the HID reports expected from them. They run from a west workspace that has this module checked out, the
 same way ZMK's own tests do (`west build -b native_sim//zmk_test_mock` with
 `-DZMK_CONFIG=<test dir>`). `zmk-config-dax6` has a runner for them (`tests/run.sh`).
 
@@ -49,6 +50,6 @@ whose one-hour timeout becomes 65535ms, the most the storage holds.
 ```
 
 The features here are edited with [daxial](https://github.com/wadackel/daxial):
-the typed settings (trackball, pointer processors and gestures) through the `dax_settings` Studio
-RPC (`proto/dax/settings/settings.proto`), the combos through `dax_combo`, the
-macros through `dax_macro`.
+the typed settings (trackball, pointer processors, encoder bindings and gestures)
+through the `dax_settings` Studio RPC (`proto/dax/settings/settings.proto`), the
+combos through `dax_combo`, the macros through `dax_macro`.
