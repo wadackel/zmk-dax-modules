@@ -1,0 +1,40 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+
+/*
+ * CONFIG_ZMK_DAX_COMBO_TEST_RELOAD (src/test/combo_test.c) empties slot 0 in flash, writes
+ *
+ *   combo 0: positions {0,1} -> key_press(B)
+ *
+ * saves it and reads the combos from flash again before the keys below are pressed. Positions
+ * 0 and 1 then press B; positions 2 and 3 bubble through as plain key presses.
+ */
+
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+
+        default_layer {
+            bindings = <
+            &kp K &kp L &kp M &kp N
+            >;
+        };
+    };
+};
+
+&kscan {
+    rows = <1>;
+    columns = <4>;
+    events = <
+    ZMK_MOCK_PRESS(0,0,10)
+    ZMK_MOCK_PRESS(0,1,10)
+    ZMK_MOCK_RELEASE(0,0,10)
+    ZMK_MOCK_RELEASE(0,1,10)
+
+    ZMK_MOCK_PRESS(0,2,10)
+    ZMK_MOCK_PRESS(0,3,10)
+    ZMK_MOCK_RELEASE(0,2,10)
+    ZMK_MOCK_RELEASE(0,3,10)
+    >;
+};

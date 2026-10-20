@@ -1,0 +1,14 @@
+combo test: emptied: slot 0 read -2
+combo test: saved 1 record(s)
+combo test: reloaded: slot 0 keys 0 1 binding resolved 0x70005
+combo test: reloaded: slot 6 read -74
+combo test: reloaded: slot 7 read -2
+combo test: saved 1 record(s)
+combo test: cleared: slot 6 read -2
+PASS: dax_combo_test_setup
+pressed: position 4 keycode 0x70005
+released: position 4 keycode 0x70005
+pressed: position 2 keycode 0x70010
+pressed: position 3 keycode 0x70011
+released: position 2 keycode 0x70010
+released: position 3 keycode 0x70011
