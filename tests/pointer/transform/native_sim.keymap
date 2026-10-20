@@ -1,0 +1,71 @@
+#include "../common.dtsi"
+
+// The daxs and dax6 pointer values: swap, then invert by the axis a report came in on, so right
+// 10, down 3, then up-left give what `zip_xy_transform (XY_SWAP | Y_INVERT)` gave. A second
+// processor turns right 2 and down 3 into scrolling, the vertical part inverted.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    swap_invert: swap_invert {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Pointer";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        xy-swap;
+        x-invert;
+        track-remainders;
+    };
+
+    to_scroll: to_scroll {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Scroll";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        xy-swap;
+        xy-to-scroll;
+        y-invert;
+    };
+
+    mock_pointer: mock_pointer {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events
+            = <INPUT_EV_REL INPUT_REL_X 10 1>
+            , <INPUT_EV_REL INPUT_REL_Y 3 1>
+            , <INPUT_EV_REL INPUT_REL_X (-7) 0>
+            , <INPUT_EV_REL INPUT_REL_Y (-5) 1>
+            ;
+    };
+
+    mock_scroll: mock_scroll {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1500>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 0>, <INPUT_EV_REL INPUT_REL_Y 3 1>;
+    };
+
+    pointer_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_pointer>;
+        input-processors = <&swap_invert>;
+    };
+
+    scroll_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_scroll>;
+        input-processors = <&to_scroll>;
+    };
+};
+
+&kscan {
+    // The run ends with the last key event, so this only keeps it alive past the last report.
+    events = <ZMK_MOCK_PRESS(0,0,2000) ZMK_MOCK_RELEASE(0,0,10)>;
+};

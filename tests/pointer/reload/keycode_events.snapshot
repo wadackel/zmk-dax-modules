@@ -1,0 +1,5 @@
+pointer test: saved 1 slot(s)
+PASS: dax_pointer_test_setup
+movement_set: Mouse movement set to 4/0
+scroll_set: Mouse scroll set to 0/0
+movement_set: Mouse movement set to 0/0

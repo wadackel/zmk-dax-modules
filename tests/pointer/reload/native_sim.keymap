@@ -1,0 +1,37 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_POINTER_TEST_RELOAD (src/test/pointer_test.c) saves scale_mul 4, writes x_invert
+// without saving, and reads the settings from flash again: right 1 at 1000 ms is sent as right 4.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    reloaded: reloaded {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Reloaded";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+    };
+
+    mock_trackball: mock_trackball {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 1 1>;
+    };
+
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_trackball>;
+        input-processors = <&reloaded>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,750) ZMK_MOCK_RELEASE(0,0,10)>;
+};

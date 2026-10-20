@@ -1,0 +1,42 @@
+#include "../common.dtsi"
+
+// Active only on the layer at position 1: right 5 at 1000 ms passes unchanged, and right 5 at
+// 2000 ms, while &mo 1 is held (1500 to 3000 ms), is doubled.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&mo 1 &none &none &none>;
+        };
+        held_layer {
+            bindings = <&trans &none &none &none>;
+        };
+    };
+
+    doubled: doubled {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Doubled";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        scale-multiplier = <2>;
+        active-layers = <0x2>;
+    };
+
+    mock_trackball: mock_trackball {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <1000>;
+        events = <INPUT_EV_REL INPUT_REL_X 5 1>, <INPUT_EV_REL INPUT_REL_X 5 1>;
+    };
+
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_trackball>;
+        input-processors = <&doubled>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1500) ZMK_MOCK_RELEASE(0,0,10)>;
+};

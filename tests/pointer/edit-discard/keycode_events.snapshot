@@ -1,0 +1,12 @@
+pointer test: write scale_div 40000: -22
+pointer test: write rotation 361: -22
+pointer test: write scale_mul 3: 0
+pointer test: write x_invert: 0
+PASS: dax_pointer_test_setup
+movement_set: Mouse movement set to -6/0
+scroll_set: Mouse scroll set to 0/0
+movement_set: Mouse movement set to 0/0
+pointer test: discarded 2 slot(s): 0
+movement_set: Mouse movement set to 2/0
+scroll_set: Mouse scroll set to 0/0
+movement_set: Mouse movement set to 0/0

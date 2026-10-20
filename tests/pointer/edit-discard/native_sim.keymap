@@ -1,0 +1,38 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_POINTER_TEST_EDIT_DISCARD (src/test/pointer_test.c) writes scale_mul 3 and
+// x_invert right after boot and discards at about 1500 ms: right 2 at 1000 ms is sent as left 6,
+// and right 2 at 2000 ms as right 2 again.
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&none &none &none &none>;
+        };
+    };
+
+    edited: edited {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Edited";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+    };
+
+    mock_trackball: mock_trackball {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <1000>;
+        events = <INPUT_EV_REL INPUT_REL_X 2 1>, <INPUT_EV_REL INPUT_REL_X 2 1>;
+    };
+
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_trackball>;
+        input-processors = <&edited>;
+    };
+};
+
+&kscan {
+    events = <ZMK_MOCK_PRESS(0,0,1250) ZMK_MOCK_RELEASE(0,0,10)>;
+};

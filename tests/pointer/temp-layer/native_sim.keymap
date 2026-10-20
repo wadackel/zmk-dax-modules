@@ -1,0 +1,62 @@
+#include "../common.dtsi"
+
+// The test moves the layer at position 1 (id 1) to the end, so position 1 is the layer with id 2.
+// Movement at 1000 ms holds position 1. Then the keys at 1150-1500 ms type:
+//   D       position 0 is bound on the held layer (id 1 would type C)
+//   LSHIFT  position 1 is transparent there and resolves to a modifier, which keeps the layer
+//   B       position 2 resolves to a plain key, which ends the layer
+//   A       position 0 again, now from the default layer
+/ {
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <&kp A &kp LSHIFT &kp B &none>;
+        };
+        moved_layer {
+            bindings = <&kp C &trans &trans &trans>;
+        };
+        held_layer {
+            bindings = <&kp D &trans &trans &trans>;
+        };
+    };
+
+    held: held {
+        compatible = "dax,input-processor-pointer";
+        #input-processor-cells = <0>;
+        display-name = "Held";
+        x-codes = <INPUT_REL_X>;
+        y-codes = <INPUT_REL_Y>;
+        temp-layer-enabled;
+        temp-layer = <1>;
+        temp-layer-deactivation-delay-ms = <2000>;
+    };
+
+    mock_trackball: mock_trackball {
+        compatible = "zmk,input-mock";
+        event-startup-delay = <1000>;
+        event-period = <20>;
+        events = <INPUT_EV_REL INPUT_REL_X 1 1>;
+    };
+
+    trackball_listener {
+        compatible = "zmk,input-listener";
+        device = <&mock_trackball>;
+        input-processors = <&held>;
+    };
+};
+
+&kscan {
+    // The first key (&none) only sets the clock: released at 1100 ms, then every 50 ms.
+    events = <
+        ZMK_MOCK_PRESS(1,1,550)
+        ZMK_MOCK_RELEASE(1,1,50)
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,50)
+        ZMK_MOCK_PRESS(0,1,50)
+        ZMK_MOCK_RELEASE(0,1,50)
+        ZMK_MOCK_PRESS(1,0,50)
+        ZMK_MOCK_RELEASE(1,0,50)
+        ZMK_MOCK_PRESS(0,0,50)
+        ZMK_MOCK_RELEASE(0,0,50)
+    >;
+};
