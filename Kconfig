@@ -318,3 +318,41 @@ config ZMK_DAX_GESTURE_RPC
     depends on ZMK_STUDIO_RPC
 
 endif
+
+config ZMK_DAX_SPLIT_IDLE_CONN
+    bool "Widen the split link's connection interval while the central is idle"
+    default n
+    depends on ZMK_SPLIT_BLE && ZMK_SPLIT_ROLE_CENTRAL
+    help
+      A split central attends every connection event of its link to a peripheral, so at
+      ZMK_SPLIT_BLE_PREF_INT it wakes its radio every few milliseconds even when nothing is
+      typed. On ZMK_ACTIVITY_IDLE the central sets ZMK_DAX_SPLIT_IDLE_CONN_INTERVAL on that
+      link, and ZMK_SPLIT_BLE_PREF_INT again on activity. Until the change back takes effect,
+      peripheral keys arrive up to one idle interval late.
+
+config ZMK_DAX_SPLIT_IDLE_CONN_INTERVAL
+    int "Split connection interval while idle, in 1.25 ms units"
+    default 24
+    range 6 3200
+    depends on ZMK_DAX_SPLIT_IDLE_CONN
+
+config ZMK_DAX_SPLIT_PERIPHERAL_SLEEP
+    bool "Deep sleep on a split peripheral once the central has been gone a while"
+    default n
+    depends on ZMK_SPLIT_BLE && !ZMK_SPLIT_ROLE_CENTRAL
+    depends on HAS_POWEROFF && !ZMK_SLEEP
+    select POWEROFF
+    select PM_DEVICE
+    select ZMK_PM_DEVICE_SUSPEND_RESUME
+    help
+      Replaces ZMK_SLEEP on a peripheral. ZMK_SLEEP counts only the peripheral's own input, so
+      it puts the peripheral to sleep while the central is in use, and the central then scans
+      for it until it comes back. With this, the peripheral stays awake while connected to the
+      central, and enters deep sleep once disconnected for
+      ZMK_DAX_SPLIT_PERIPHERAL_SLEEP_TIMEOUT, unless on USB power. Its keys wake it, as with
+      ZMK_SLEEP.
+
+config ZMK_DAX_SPLIT_PERIPHERAL_SLEEP_TIMEOUT
+    int "Milliseconds without the central before deep sleep"
+    default 300000
+    depends on ZMK_DAX_SPLIT_PERIPHERAL_SLEEP

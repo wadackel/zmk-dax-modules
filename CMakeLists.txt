@@ -3,6 +3,8 @@
 target_sources_ifdef(CONFIG_ZMK_OS_LAYER app PRIVATE src/os_layer.c)
 target_sources_ifdef(CONFIG_ZMK_TRACKBALL_SETTINGS app PRIVATE src/trackball_settings.c)
 target_sources_ifdef(CONFIG_ZMK_DAX_HOLD_MACRO app PRIVATE src/behaviors/behavior_hold_macro.c)
+target_sources_ifdef(CONFIG_ZMK_DAX_SPLIT_IDLE_CONN app PRIVATE src/split/idle_conn.c)
+target_sources_ifdef(CONFIG_ZMK_DAX_SPLIT_PERIPHERAL_SLEEP app PRIVATE src/split/peripheral_sleep.c)
 
 target_include_directories(app PRIVATE include)
 
