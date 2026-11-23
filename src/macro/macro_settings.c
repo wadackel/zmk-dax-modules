@@ -418,7 +418,12 @@ int dax_macro_delete(uint32_t slot) {
 }
 
 int dax_macro_reset(uint32_t slot) {
-    return slot < CONFIG_ZMK_DAX_MACRO_COUNT ? dax_setting_unset(&dax_macro_slots, slot) : -ENOENT;
+    if (slot >= CONFIG_ZMK_DAX_MACRO_COUNT) {
+        return -ENOENT;
+    }
+    const struct macro_default *def = find_default(slot);
+    int ret = def ? check_unique(def->name, slot) : 0;
+    return ret ?: dax_setting_unset(&dax_macro_slots, slot);
 }
 
 /* Any reason this build cannot play a step is -EINVAL. */
