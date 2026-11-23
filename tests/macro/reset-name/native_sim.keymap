@@ -1,0 +1,5 @@
+#include "../common.dtsi"
+
+// CONFIG_ZMK_DAX_MACRO_TEST_RESET_NAME (src/test/macro_test.c) renames the default in slot 0,
+// gives its name to a new macro in slot 1 that taps B, and resets slot 0, which is refused until
+// slot 1 is renamed. The keys then play ESC and LANG2, B, C, nothing.

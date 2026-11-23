@@ -283,6 +283,9 @@ config ZMK_DAX_MACRO_TEST_RELOAD
     bool "Saves, then reads the macros from flash again"
     select ZMK_DAX_SETTINGS_TEST
 
+config ZMK_DAX_MACRO_TEST_RESET_NAME
+    bool "Resets a renamed default whose name another macro took"
+
 endchoice
 
 endif

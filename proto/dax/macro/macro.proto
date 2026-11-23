@@ -82,6 +82,7 @@ message RenameMacroRequest {
 message DeleteMacroRequest { uint32 slot = 1; }
 
 // Forgets what was written to the slot, so its devicetree default, or nothing, shows again.
+// ERROR_CODE_EXISTS while another slot shows the default's name.
 message ResetMacroRequest { uint32 slot = 1; }
 
 message SetMacroStepRequest {

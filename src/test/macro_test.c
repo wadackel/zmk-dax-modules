@@ -148,6 +148,24 @@ static int setup(void) {
     LOG_INF("macro test: new is in slot %u", slot);
     return ret ?: dax_macro_discard(NULL);
 }
+#elif IS_ENABLED(CONFIG_ZMK_DAX_MACRO_TEST_RESET_NAME)
+/* tests/macro/reset-name has four slots, with defaults in 0 (esc_lang2) and 2 (other). */
+static int setup(void) {
+    uint32_t slot = UINT32_MAX;
+    struct dax_macro_step step = tap_key(B);
+    log_result("rename 0", dax_macro_rename(0, "renamed"));
+    log_result("create esc_lang2", dax_macro_create("esc_lang2", &slot));
+    LOG_INF("macro test: esc_lang2 is in slot %u", slot);
+    log_result("append a tap to 1", dax_macro_append_step(1, &step));
+    log_result("reset 0 while 1 has its name", dax_macro_reset(0));
+    log_slots("refused");
+    log_result("rename 1", dax_macro_rename(1, "uno"));
+    log_result("reset 0", dax_macro_reset(0));
+    log_result("reset 2, never edited", dax_macro_reset(2));
+    log_result("reset 3, no default", dax_macro_reset(3));
+    log_slots("reset");
+    return 0;
+}
 #endif
 
 static void run_setup(struct k_work *work) {

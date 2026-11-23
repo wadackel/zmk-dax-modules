@@ -1,0 +1,24 @@
+macro test: rename 0: 0
+macro test: create esc_lang2: 0
+macro test: esc_lang2 is in slot 1
+macro test: append a tap to 1: 0
+macro test: reset 0 while 1 has its name: -17
+macro test: refused: slot 0 renamed, 10 bytes, steps KT, overridden, unsaved 1
+macro test: refused: slot 1 esc_lang2, 7 bytes, steps T, runtime, unsaved 1
+macro test: refused: slot 2 other, 4 bytes, steps K, default, unsaved 0
+macro test: rename 1: 0
+macro test: reset 0: 0
+macro test: reset 2, never edited: 0
+macro test: reset 3, no default: 0
+macro test: reset: slot 0 esc_lang2, 10 bytes, steps KT, default, unsaved 0
+macro test: reset: slot 1 uno, 7 bytes, steps T, runtime, unsaved 1
+macro test: reset: slot 2 other, 4 bytes, steps K, default, unsaved 0
+PASS: dax_macro_test_setup
+pressed: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x29 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x91 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x05 implicit_mods 0x00 explicit_mods 0x00
+pressed: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00
+released: usage_page 0x07 keycode 0x06 implicit_mods 0x00 explicit_mods 0x00

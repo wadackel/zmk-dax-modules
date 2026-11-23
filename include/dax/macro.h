@@ -77,7 +77,8 @@ int dax_macro_rename(uint32_t slot, const char *name);
 /* Removes a macro written at runtime. One that comes with the devicetree cannot be deleted; a
  * reset puts it back instead. */
 int dax_macro_delete(uint32_t slot);
-/* Forgets what was written to the slot, so its devicetree default, or nothing, shows again. */
+/* Forgets what was written to the slot, so its devicetree default, or nothing, shows again.
+ * -EEXIST while another slot shows the default's name. */
 int dax_macro_reset(uint32_t slot);
 int dax_macro_set_step(uint32_t slot, uint32_t index, const struct dax_macro_step *step);
 int dax_macro_append_step(uint32_t slot, const struct dax_macro_step *step);
